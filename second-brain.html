@@ -1564,11 +1564,11 @@ function layoutGraph(){
   const seed=42;let rng=seed;
   const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
 
-  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:10,vx:0,vy:0}];
+  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:18,vx:0,vy:0}];
   CONTACTS.forEach((c,i)=>{
     const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.6;
     const dist=120+(rand()-.5)*60;
-    const r=Math.min(5+c.mentions*.2,9);
+    const r=Math.min(9+c.mentions*.35,16);
     gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,role:c.role,
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
   });
@@ -1576,7 +1576,7 @@ function layoutGraph(){
     const angle=rand()*Math.PI*2;
     const dist=80+rand()*260;
     const short=d.name.replace(/-/g,' ').slice(0,20);
-    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:4,vx:0,vy:0});
+    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:7,vx:0,vy:0});
   });
 
   gEdges=[
@@ -1741,19 +1741,19 @@ function drawGraph(){
 
     if(n.type==='user'){
       gCtx.fillStyle='#F5F1EA';
-      gCtx.font='bold 6px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
+      gCtx.font='bold 8px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       gCtx.fillText('YOU',n.x,n.y);
     }
 
     // Labels always visible, to the right of node
     if(n.type!=='user'){
-      gCtx.globalAlpha=dimmed?.08:(isHov?1:.75);
-      const fs=isHov?10:9;
+      gCtx.globalAlpha=dimmed?.08:(isHov?1:.8);
+      const fs=isHov?12:11;
       gCtx.font=`${isHov?600:400} ${fs}px DM Sans,sans-serif`;
       gCtx.textAlign='left';gCtx.textBaseline='middle';
-      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.78)';
+      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.82)';
       const lbl=n.label.split(' ').slice(0,2).join(' ').slice(0,18);
-      gCtx.fillText(lbl,n.x+n.r+4,n.y);
+      gCtx.fillText(lbl,n.x+n.r+5,n.y);
     }
     gCtx.globalAlpha=1;
   });
