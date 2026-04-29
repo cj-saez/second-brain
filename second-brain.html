@@ -1593,56 +1593,74 @@ function layoutGraph(){
   runForceLayout(80);
 }
 
-function runForceLayout(iters){
-  if(!gNodes.length)return;
-  const n=gNodes.length;
-  const k=Math.sqrt(600*500/Math.max(n,1))*0.5;
-  const maxRadius=380; // hard cap — nothing gets further than this from center
-  const allE=[...gEdges,...GRAPH_AI_LINKS.map(l=>({from:l.a,to:l.b,w:1}))];
+function runContactForce(iters){
+  // Force layout for contacts/companies only — docs placed separately
+  const contacts=gNodes.filter(n=>n.type!=='document');
+  const nc=contacts.length;
+  if(nc<2)return;
+  const k=Math.sqrt(400*400/nc)*0.8;
   for(let it=0;it<iters;it++){
-    const cool=Math.max(0.04,1-it/iters);
-    gNodes.forEach(nd=>{nd.vx=0;nd.vy=0;});
-    // Repulsion (skip doc-doc pairs to save compute & reduce spread)
-    for(let i=0;i<n;i++){
-      for(let j=i+1;j<n;j++){
-        if(gNodes[i].type==='document'&&gNodes[j].type==='document')continue;
-        const dx=gNodes[i].x-gNodes[j].x,dy=gNodes[i].y-gNodes[j].y;
+    const cool=Math.max(0.05,1-it/iters);
+    contacts.forEach(n=>{n.vx=0;n.vy=0;});
+    for(let i=0;i<nc;i++){
+      for(let j=i+1;j<nc;j++){
+        const dx=contacts[i].x-contacts[j].x,dy=contacts[i].y-contacts[j].y;
         const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
         const f=k*k/d;
-        const fx=dx/d*f,fy=dy/d*f;
-        gNodes[i].vx+=fx;gNodes[i].vy+=fy;
-        gNodes[j].vx-=fx;gNodes[j].vy-=fy;
+        contacts[i].vx+=dx/d*f;contacts[i].vy+=dy/d*f;
+        contacts[j].vx-=dx/d*f;contacts[j].vy-=dy/d*f;
       }
     }
-    // Attraction along edges
-    allE.forEach(e=>{
-      const a=gNodes.find(nd=>nd.id===e.from),b=gNodes.find(nd=>nd.id===e.to);
+    gEdges.forEach(e=>{
+      const a=contacts.find(n=>n.id===e.from),b=contacts.find(n=>n.id===e.to);
       if(!a||!b)return;
       const dx=b.x-a.x,dy=b.y-a.y;
       const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
-      const f=d*d/k*0.3;
-      const fx=dx/d*f,fy=dy/d*f;
-      if(a.id!=='you'){a.vx+=fx;a.vy+=fy;}
-      if(b.id!=='you'){b.vx-=fx;b.vy-=fy;}
+      const f=d*d/k*0.4;
+      if(a.id!=='you'){a.vx+=dx/d*f;a.vy+=dy/d*f;}
+      if(b.id!=='you'){b.vx-=dx/d*f;b.vy-=dy/d*f;}
     });
-    // Strong gravity — all nodes pulled toward center
-    gNodes.forEach(nd=>{
-      if(nd.id==='you')return;
-      const g=nd.type==='document'?0.06:0.02;
-      nd.vx-=nd.x*g;nd.vy-=nd.y*g;
-    });
-    // Apply with displacement cap
-    const maxD=k*cool*2;
-    gNodes.forEach(nd=>{
-      if(nd.id==='you')return;
-      const sp=Math.sqrt(nd.vx*nd.vx+nd.vy*nd.vy);
-      if(sp>maxD){nd.vx=nd.vx/sp*maxD;nd.vy=nd.vy/sp*maxD;}
-      nd.x+=nd.vx;nd.y+=nd.vy;
-      // Hard radius clamp
-      const r=Math.sqrt(nd.x*nd.x+nd.y*nd.y);
-      if(r>maxRadius){nd.x=nd.x/r*maxRadius;nd.y=nd.y/r*maxRadius;}
+    contacts.forEach(n=>{
+      if(n.id==='you')return;
+      n.vx-=n.x*0.04;n.vy-=n.y*0.04;
+      const sp=Math.sqrt(n.vx*n.vx+n.vy*n.vy),maxD=k*cool*2;
+      if(sp>maxD){n.vx=n.vx/sp*maxD;n.vy=n.vy/sp*maxD;}
+      n.x+=n.vx;n.y+=n.vy;
     });
   }
+}
+
+function placeDocsByConnections(){
+  // Each doc goes near the centroid of its connected contacts; unconnected docs form a tidy inner ring
+  let rng2=7919;
+  const r2=()=>{rng2=(rng2*1664525+1013904223)&0xffffffff;return(rng2>>>0)/4294967296;};
+  const unconnected=[];
+  gNodes.filter(n=>n.type==='document').forEach(doc=>{
+    const links=GRAPH_AI_LINKS.filter(l=>l.a===doc.id||l.b===doc.id);
+    if(links.length===0){unconnected.push(doc);return;}
+    let cx=0,cy=0,cnt=0;
+    links.forEach(l=>{
+      const oid=l.a===doc.id?l.b:l.a;
+      const other=gNodes.find(n=>n.id===oid);
+      if(other){cx+=other.x;cy+=other.y;cnt++;}
+    });
+    if(cnt>0){
+      const angle=r2()*Math.PI*2;
+      const dist=38+r2()*28;
+      doc.x=cx/cnt+Math.cos(angle)*dist;
+      doc.y=cy/cnt+Math.sin(angle)*dist;
+    }
+  });
+  // Unconnected docs: evenly spaced ring at radius ~200
+  unconnected.forEach((doc,i)=>{
+    const angle=(i/Math.max(unconnected.length,1))*Math.PI*2;
+    doc.x=Math.cos(angle)*200;doc.y=Math.sin(angle)*200;
+  });
+}
+
+function runForceLayout(iters){
+  runContactForce(iters);
+  placeDocsByConnections();
   fitGraph();
 }
 
@@ -1670,7 +1688,8 @@ async function fetchAIConnections(){
     const data=await res.json();
     if(data.links&&data.links.length>0){
       GRAPH_AI_LINKS=data.links;
-      runForceLayout(50);
+      placeDocsByConnections();
+      fitGraph();
       drawGraph();
       if(statusEl)statusEl.textContent=`${data.links.length} connections mapped by AI`;
     }
