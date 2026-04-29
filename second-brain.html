@@ -328,19 +328,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .do-resolved{background:rgba(34,197,94,.1);color:var(--green)}
 
 /* GRAPH */
-.graph-wrap{flex:1;position:relative;overflow:hidden}
+.graph-wrap{flex:1;position:relative;overflow:hidden;background:#0d1117}
 #graph-canvas{width:100%;height:100%;cursor:grab;display:block}
 #graph-canvas:active{cursor:grabbing}
-.graph-legend{position:absolute;bottom:24px;left:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 32px rgba(0,0,0,.09)}
-.g-legend-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
-.gli{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2)}
-.gld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.graph-tip{position:absolute;background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:12px;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.2);z-index:10}
-.graph-info{position:absolute;top:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:240px;display:none;box-shadow:0 6px 32px rgba(0,0,0,.09)}
-.gi-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px}
-.gi-type{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
-.gi-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--border)}
+.graph-legend{position:absolute;bottom:20px;left:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(12px)}
+.g-legend-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px}
+.gli{display:flex;align-items:center;gap:9px;font-size:12px;color:rgba(255,255,255,.6)}
+.gld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.graph-tip{position:absolute;background:rgba(15,17,26,.9);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.9);padding:7px 13px;border-radius:8px;font-size:12px;pointer-events:none;display:none;white-space:nowrap;backdrop-filter:blur(8px);z-index:10}
+.graph-info{position:absolute;top:20px;right:20px;background:#161b27;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;width:260px;display:none;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+.gi-name{font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;line-height:1.35}
+.gi-type{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px}
+.gi-stat{display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.45);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.gi-stat strong{color:rgba(255,255,255,.8)}
 .gi-stat:last-child{border-bottom:none}
+.gi-synth{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;margin-top:10px;min-height:40px}
 
 /* BRIEF CHAT */
 .brief-chat-wrap{border-top:1px solid var(--border);margin:32px 52px 0;padding:24px 0 40px}
@@ -702,11 +704,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
         <canvas id="graph-canvas"></canvas>
         <div class="graph-legend">
           <div class="g-legend-title">Node types</div>
-          <div class="gli"><div class="gld" style="background:#14120B"></div>You</div>
-          <div class="gli"><div class="gld" style="background:#4A7FD4"></div>Person</div>
-          <div class="gli"><div class="gld" style="background:#E05252"></div>Company</div>
-          <div class="gli"><div class="gld" style="background:#C49A3C;position:relative"><div style="position:absolute;inset:30%;border-radius:50%;background:rgba(255,255,255,.5)"></div></div>Document</div>
-          <div id="graph-ai-status" style="font-size:10px;color:var(--ink-3);margin-top:4px;font-style:italic"></div>
+          <div class="gli"><div class="gld" style="background:#f1f5f9"></div>You</div>
+          <div class="gli"><div class="gld" style="background:#60a5fa"></div>Person</div>
+          <div class="gli"><div class="gld" style="background:#4ade80"></div>Company</div>
+          <div class="gli"><div class="gld" style="background:#c084fc"></div>Document</div>
+          <div id="graph-ai-status" style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;font-style:italic"></div>
         </div>
         <div class="graph-tip" id="graph-tip"></div>
         <div class="graph-info" id="graph-info"></div>
@@ -1507,9 +1509,9 @@ function buildDecisions(){
 
 // ===== GRAPH =====
 let gNodes=[],gEdges=[],gCanvas,gCtx,gW=0,gH=0,gDPR=1;
-let gZoom=0.7,gPanX=0,gPanY=0;
+let gZoom=1,gPanX=0,gPanY=0;
 let gIsDragging=false,gDragLast=null,gDragMoved=false;
-let gHoverNode=null;
+let gHoverNode=null,gHoverEdge=null;
 
 let GRAPH_AI_LINKS=[
   {a:'d0',b:'c1',reason:'Margin bridge built for Cascade'},
@@ -1564,110 +1566,143 @@ function layoutGraph(){
   let rng=42;
   const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
 
-  // All nodes start in a tight cluster near center so repulsion doesn't explode them
-  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:14,vx:0,vy:0}];
+  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:10,vx:0,vy:0}];
   CONTACTS.forEach((c,i)=>{
-    const angle=(i/CONTACTS.length)*Math.PI*2;
-    const dist=50+(rand()-.5)*30;
-    const r=Math.min(8+c.mentions*.25,14);
+    const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.3;
+    const dist=55+(rand()-.5)*20;
     gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,role:c.role,
-      x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
-  });
-  DOCS.forEach((d,i)=>{
-    const angle=rand()*Math.PI*2;
-    const dist=rand()*60; // start close to center — forces will spread them correctly
-    const short=d.name.replace(/-/g,' ').slice(0,20);
-    gNodes.push({id:'d'+i,label:short,type:'document',
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
+  });
+  // Documents added after AI links load — initially hidden
+  DOCS.forEach((d,i)=>{
+    const short=d.name.replace(/-/g,' ').slice(0,22);
+    gNodes.push({id:'d'+i,label:short,type:'document',x:0,y:0,r:5,vx:0,vy:0,hidden:true});
   });
 
   gEdges=[
-    {from:'you',to:'c1',w:14},{from:'you',to:'c5',w:6},{from:'you',to:'c10',w:5},
-    {from:'you',to:'c8',w:14},{from:'you',to:'c7',w:2},{from:'you',to:'c4',w:4},
-    {from:'you',to:'c2',w:5},{from:'you',to:'c3',w:6},{from:'you',to:'c6',w:3},
-    {from:'c1',to:'c2',w:6},{from:'c1',to:'c3',w:5},{from:'c1',to:'c6',w:5},{from:'c1',to:'c9',w:2},
-    {from:'c1',to:'c14',w:2},{from:'c1',to:'c23',w:2},{from:'c1',to:'c30',w:2},
-    {from:'c5',to:'c11',w:3},{from:'c2',to:'c9',w:3},
-    {from:'c8',to:'c21',w:5},{from:'c8',to:'c22',w:3},{from:'c15',to:'c8',w:4},{from:'c16',to:'c15',w:3},
-    {from:'c7',to:'c17',w:2},{from:'c4',to:'c13',w:2},
-    {from:'c18',to:'c19',w:4},{from:'c25',to:'c29',w:3},
+    {from:'you',to:'c1'},{from:'you',to:'c5'},{from:'you',to:'c10'},
+    {from:'you',to:'c8'},{from:'you',to:'c7'},{from:'you',to:'c4'},
+    {from:'you',to:'c2'},{from:'you',to:'c3'},{from:'you',to:'c6'},
+    {from:'c1',to:'c2'},{from:'c1',to:'c3'},{from:'c1',to:'c6'},{from:'c1',to:'c9'},
+    {from:'c1',to:'c14'},{from:'c1',to:'c23'},{from:'c1',to:'c30'},
+    {from:'c5',to:'c11'},{from:'c2',to:'c9'},
+    {from:'c8',to:'c21'},{from:'c8',to:'c22'},{from:'c15',to:'c8'},{from:'c16',to:'c15'},
+    {from:'c7',to:'c17'},{from:'c4',to:'c13'},
+    {from:'c18',to:'c19'},{from:'c25',to:'c29'},
   ];
-  runForceLayout(150);
+  layoutContacts(120);
+  fitGraph();
 }
 
-function runFullForce(iters){
-  const nodes=gNodes;
-  const n=nodes.length;
-  if(n<2)return;
-  const nodeMap=new Map(nodes.map(nd=>[nd.id,nd]));
-  const edges=[];
-  gEdges.forEach(e=>edges.push({a:e.from,b:e.to,str:1.0}));
-  GRAPH_AI_LINKS.forEach(l=>edges.push({a:l.a,b:l.b,str:0.7}));
-
-  const k=38; // fixed small ideal distance — keeps graph compact
-  const MAX_R=310; // hard cap so nothing escapes the viewport
-
+function layoutContacts(iters){
+  // Force layout for contacts/you only — tight, clean cluster
+  const contacts=gNodes.filter(n=>n.type!=='document');
+  const nc=contacts.length;
+  const nodeMap=new Map(contacts.map(n=>[n.id,n]));
+  const k=52;
   for(let it=0;it<iters;it++){
-    const cool=Math.max(0.03,1-it/iters);
-    const temp=k*cool*2.5;
-    nodes.forEach(nd=>{nd.vx=0;nd.vy=0;});
-
-    // Repulsion between all pairs
-    for(let i=0;i<n;i++){
-      for(let j=i+1;j<n;j++){
-        const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
+    const cool=Math.max(0.04,1-it/iters);
+    const temp=k*cool*2;
+    contacts.forEach(n=>{n.vx=0;n.vy=0;});
+    for(let i=0;i<nc;i++){
+      for(let j=i+1;j<nc;j++){
+        const dx=contacts[i].x-contacts[j].x,dy=contacts[i].y-contacts[j].y;
         const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
         const f=k*k/d;
-        nodes[i].vx+=dx/d*f;nodes[i].vy+=dy/d*f;
-        nodes[j].vx-=dx/d*f;nodes[j].vy-=dy/d*f;
+        contacts[i].vx+=dx/d*f;contacts[i].vy+=dy/d*f;
+        contacts[j].vx-=dx/d*f;contacts[j].vy-=dy/d*f;
       }
     }
-
-    // Attraction along edges
-    edges.forEach(e=>{
-      const a=nodeMap.get(e.a),b=nodeMap.get(e.b);
+    gEdges.forEach(e=>{
+      const a=nodeMap.get(e.from),b=nodeMap.get(e.to);
       if(!a||!b)return;
       const dx=b.x-a.x,dy=b.y-a.y;
       const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
-      const f=d*d/k*e.str*0.35;
+      const f=d*d/k*0.45;
       if(a.id!=='you'){a.vx+=dx/d*f;a.vy+=dy/d*f;}
       if(b.id!=='you'){b.vx-=dx/d*f;b.vy-=dy/d*f;}
     });
-
-    // Apply: gravity + temp cap + hard radius cap
-    nodes.forEach(nd=>{
-      if(nd.id==='you')return;
-      nd.vx-=nd.x*0.09; nd.vy-=nd.y*0.09; // strong gravity toward center
-      const sp=Math.sqrt(nd.vx*nd.vx+nd.vy*nd.vy);
-      if(sp>temp){nd.vx=nd.vx/sp*temp;nd.vy=nd.vy/sp*temp;}
-      nd.x+=nd.vx;nd.y+=nd.vy;
-      const r=Math.sqrt(nd.x*nd.x+nd.y*nd.y);
-      if(r>MAX_R){nd.x=nd.x/r*MAX_R;nd.y=nd.y/r*MAX_R;}
+    contacts.forEach(n=>{
+      if(n.id==='you')return;
+      n.vx-=n.x*0.04;n.vy-=n.y*0.04;
+      const sp=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+      if(sp>temp){n.vx=n.vx/sp*temp;n.vy=n.vy/sp*temp;}
+      n.x+=n.vx;n.y+=n.vy;
     });
   }
 }
 
-function runForceLayout(iters){
-  runFullForce(iters);
-  fitGraph();
+function placeAndSpreadDocs(){
+  let rng=31337;
+  const r2=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
+  const nodeMap=new Map(gNodes.map(n=>[n.id,n]));
+  const docs=gNodes.filter(n=>n.type==='document');
+
+  // Place each doc near centroid of its connections
+  docs.forEach(doc=>{
+    const links=GRAPH_AI_LINKS.filter(l=>l.a===doc.id||l.b===doc.id);
+    doc.hidden=false;
+    if(links.length===0){
+      doc.x=(r2()-.5)*80;doc.y=(r2()-.5)*80;return;
+    }
+    let cx=0,cy=0,cnt=0;
+    links.slice(0,4).forEach(l=>{
+      const oid=l.a===doc.id?l.b:l.a;
+      const other=nodeMap.get(oid);
+      if(other&&!other.hidden){cx+=other.x;cy+=other.y;cnt++;}
+    });
+    if(cnt===0){doc.x=(r2()-.5)*80;doc.y=(r2()-.5)*80;return;}
+    const angle=r2()*Math.PI*2;
+    const dist=22+r2()*22;
+    doc.x=cx/cnt+Math.cos(angle)*dist;
+    doc.y=cy/cnt+Math.sin(angle)*dist;
+  });
+
+  // Light repulsion pass between docs only so they don't stack
+  const nd=docs.length;
+  const kd=14;
+  for(let it=0;it<40;it++){
+    const cool=Math.max(0.08,1-it/40);
+    docs.forEach(n=>{n.vx=0;n.vy=0;});
+    for(let i=0;i<nd;i++){
+      for(let j=i+1;j<nd;j++){
+        const dx=docs[i].x-docs[j].x,dy=docs[i].y-docs[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d>kd*4||d<0.001)continue;
+        const f=kd*kd/d;
+        docs[i].vx+=dx/d*f;docs[i].vy+=dy/d*f;
+        docs[j].vx-=dx/d*f;docs[j].vy-=dy/d*f;
+      }
+    }
+    docs.forEach(n=>{
+      const sp=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+      const maxD=kd*cool*3;
+      if(sp>maxD){n.vx=n.vx/sp*maxD;n.vy=n.vy/sp*maxD;}
+      n.x+=n.vx;n.y+=n.vy;
+    });
+  }
 }
 
 function fitGraph(){
-  if(!gNodes.length||!gW||!gH)return;
+  if(!gW||!gH)return;
+  const visible=gNodes.filter(n=>!n.hidden);
+  if(!visible.length)return;
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  gNodes.forEach(n=>{
-    minX=Math.min(minX,n.x-n.r);maxX=Math.max(maxX,n.x+n.r+80); // +80 for labels
-    minY=Math.min(minY,n.y-n.r);maxY=Math.max(maxY,n.y+n.r);
+  visible.forEach(n=>{
+    minX=Math.min(minX,n.x-n.r);
+    maxX=Math.max(maxX,n.x+n.r+70); // room for labels
+    minY=Math.min(minY,n.y-n.r);
+    maxY=Math.max(maxY,n.y+n.r);
   });
-  const pad=50,w=maxX-minX,h=maxY-minY;
+  const pad=48,w=maxX-minX,h=maxY-minY;
   if(w<=0||h<=0)return;
-  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,2.0);
+  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,3);
   gPanX=-(minX+w/2)*gZoom;gPanY=-(minY+h/2)*gZoom;
 }
 
 async function fetchAIConnections(){
   const statusEl=document.getElementById('graph-ai-status');
-  if(statusEl)statusEl.textContent='AI is analyzing connections…';
+  if(statusEl)statusEl.textContent='AI mapping connections…';
   try{
     const contacts=gNodes.filter(n=>n.type!=='document'&&n.id!=='you').map(n=>({id:n.id,label:n.label,type:n.type,role:n.role||''}));
     const docs=gNodes.filter(n=>n.type==='document').map(n=>({id:n.id,label:n.label}));
@@ -1676,200 +1711,239 @@ async function fetchAIConnections(){
     const data=await res.json();
     if(data.links&&data.links.length>0){
       GRAPH_AI_LINKS=data.links;
-      runFullForce(80);
+      placeAndSpreadDocs();
       fitGraph();
       drawGraph();
-      if(statusEl)statusEl.textContent=`${data.links.length} connections mapped by AI`;
+      if(statusEl)statusEl.textContent=`${data.links.length} connections mapped`;
+    }else{
+      // Show docs even if no AI links
+      gNodes.filter(n=>n.type==='document').forEach(n=>{n.hidden=false;});
+      fitGraph();drawGraph();
+      if(statusEl)statusEl.textContent='';
     }
   }catch(e){if(statusEl)statusEl.textContent='';}
 }
 
+// ── Drawing ───────────────────────────────────────────────────────────────────
+const G_COL={user:'#f1f5f9',person:'#60a5fa',company:'#4ade80',document:'#c084fc'};
+
 function drawGraph(){
   if(!gCtx||!gW||!gH)return;
-  const W=gW,H=gH;
-  gCtx.clearRect(0,0,W,H);
-  gCtx.fillStyle='#F5F1EA';gCtx.fillRect(0,0,W,H);
-
+  gCtx.clearRect(0,0,gW,gH);
+  gCtx.fillStyle='#0d1117';gCtx.fillRect(0,0,gW,gH);
   gCtx.save();
-  gCtx.translate(W/2+gPanX,H/2+gPanY);
+  gCtx.translate(gW/2+gPanX,gH/2+gPanY);
   gCtx.scale(gZoom,gZoom);
 
   const hovId=gHoverNode?gHoverNode.id:null;
+  const hovEdge=gHoverEdge;
   const connSet=hovId?getConnected(hovId):null;
 
-  // Draw all edges first
-  gEdges.forEach(e=>{
-    const a=gNodes.find(n=>n.id===e.from),b=gNodes.find(n=>n.id===e.to);
-    if(!a||!b)return;
-    const active=hovId&&connSet&&(connSet.has(e.from)&&connSet.has(e.to));
-    const dim=hovId&&!active;
-    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
-    gCtx.strokeStyle=dim?'rgba(196,154,60,.04)':active?'rgba(196,154,60,.7)':'rgba(196,154,60,.22)';
-    gCtx.lineWidth=active?1.5:0.8;gCtx.stroke();
-  });
+  // ── Edges ─────────────────────────────────────────────────────────────────
+  const allEdgeData=[
+    ...gEdges.map(e=>({a:e.from,b:e.to,ai:false})),
+    ...GRAPH_AI_LINKS.map(l=>({a:l.a,b:l.b,ai:true,reason:l.reason}))
+  ];
 
-  // AI links
-  GRAPH_AI_LINKS.forEach(lk=>{
-    const a=gNodes.find(n=>n.id===lk.a),b=gNodes.find(n=>n.id===lk.b);
-    if(!a||!b)return;
-    const active=hovId&&(hovId===lk.a||hovId===lk.b);
-    const dim=hovId&&!active;
+  allEdgeData.forEach((e,idx)=>{
+    const na=gNodes.find(n=>n.id===e.a),nb=gNodes.find(n=>n.id===e.b);
+    if(!na||!nb||na.hidden||nb.hidden)return;
+    const isHovEdge=hovEdge&&hovEdge.a===e.a&&hovEdge.b===e.b;
+    const active=isHovEdge||(hovId&&connSet&&connSet.has(e.a)&&connSet.has(e.b));
+    const dim=hovId&&!active&&!isHovEdge;
     gCtx.save();
-    if(!active)gCtx.setLineDash([2,5]);
-    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
-    gCtx.strokeStyle=dim?'rgba(196,154,60,.03)':active?'rgba(196,154,60,.75)':'rgba(196,154,60,.13)';
-    gCtx.lineWidth=active?1.4:0.7;gCtx.stroke();
+    if(e.ai&&!isHovEdge)gCtx.setLineDash([2,4]);
+    gCtx.beginPath();gCtx.moveTo(na.x,na.y);gCtx.lineTo(nb.x,nb.y);
+    gCtx.strokeStyle=isHovEdge?'rgba(255,255,255,.9)':dim?'rgba(255,255,255,.04)':active?'rgba(255,255,255,.55)':'rgba(255,255,255,.14)';
+    gCtx.lineWidth=isHovEdge?2:active?1.5:0.8;
+    gCtx.stroke();
     gCtx.restore();
-    if(active){
-      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    if(isHovEdge&&e.reason){
+      const mx=(na.x+nb.x)/2,my=(na.y+nb.y)/2;
       gCtx.font='9px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
-      const tw=gCtx.measureText(lk.reason).width+12;
-      gCtx.fillStyle='rgba(196,154,60,.92)';gCtx.fillRect(mx-tw/2,my-9,tw,18);
-      gCtx.fillStyle='#fff';gCtx.fillText(lk.reason,mx,my);
+      const tw=gCtx.measureText(e.reason).width+14;
+      gCtx.fillStyle='rgba(255,255,255,.13)';gCtx.fillRect(mx-tw/2,my-10,tw,20);
+      gCtx.fillStyle='rgba(255,255,255,.85)';gCtx.fillText(e.reason,mx,my);
     }
   });
 
-  // Nodes + labels
-  gNodes.forEach(n=>{
+  // ── Nodes ─────────────────────────────────────────────────────────────────
+  gNodes.filter(n=>!n.hidden).forEach(n=>{
     const isHov=n.id===hovId;
     const dimmed=hovId&&!isHov&&connSet&&!connSet.has(n.id);
-    const col=n.type==='user'?'#14120B':n.type==='person'?'#4A7FD4':n.type==='company'?'#E05252':'#C49A3C';
-    gCtx.globalAlpha=dimmed?.1:1;
+    const col=G_COL[n.type]||'#94a3b8';
+    gCtx.globalAlpha=dimmed?.12:1;
 
     if(isHov){
-      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+6,0,Math.PI*2);
-      gCtx.strokeStyle=col+'55';gCtx.lineWidth=2;gCtx.stroke();
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+7,0,Math.PI*2);
+      gCtx.strokeStyle=col+'44';gCtx.lineWidth=1.5;gCtx.stroke();
     }
-
-    // All nodes are circles
     gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+(isHov?2:0),0,Math.PI*2);
     gCtx.fillStyle=col;gCtx.fill();
 
-    // Inner dot for documents (visual distinction without shape change)
-    if(n.type==='document'){
-      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r*.38,0,Math.PI*2);
-      gCtx.fillStyle='rgba(255,255,255,.55)';gCtx.fill();
-    }
-
     if(n.type==='user'){
-      gCtx.fillStyle='#F5F1EA';
-      gCtx.font='bold 8px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
+      gCtx.fillStyle='#0d1117';
+      gCtx.font='bold 6px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       gCtx.fillText('YOU',n.x,n.y);
-    }
-
-    // Labels always visible, to the right of node
-    if(n.type!=='user'){
-      gCtx.globalAlpha=dimmed?.08:(isHov?1:.8);
-      const fs=isHov?12:11;
-      gCtx.font=`${isHov?600:400} ${fs}px DM Sans,sans-serif`;
+    } else {
+      gCtx.globalAlpha=dimmed?.08:(isHov?1:.75);
+      gCtx.font=`${isHov?500:400} ${isHov?11:10}px DM Sans,sans-serif`;
       gCtx.textAlign='left';gCtx.textBaseline='middle';
-      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.82)';
-      const lbl=n.label.split(' ').slice(0,2).join(' ').slice(0,18);
-      gCtx.fillText(lbl,n.x+n.r+5,n.y);
+      gCtx.fillStyle=isHov?col:'rgba(255,255,255,.75)';
+      gCtx.fillText(n.label.split(' ').slice(0,2).join(' ').slice(0,20),n.x+n.r+4,n.y);
     }
     gCtx.globalAlpha=1;
   });
   gCtx.restore();
 }
 
+// ── Utilities ─────────────────────────────────────────────────────────────────
 function getConnected(id){
   const s=new Set([id]);
   gEdges.forEach(e=>{if(e.from===id)s.add(e.to);if(e.to===id)s.add(e.from);});
   GRAPH_AI_LINKS.forEach(l=>{if(l.a===id)s.add(l.b);if(l.b===id)s.add(l.a);});
   return s;
 }
-
-function screenToWorld(sx,sy){
-  return{x:(sx-gW/2-gPanX)/gZoom,y:(sy-gH/2-gPanY)/gZoom};
-}
-
+function screenToWorld(sx,sy){return{x:(sx-gW/2-gPanX)/gZoom,y:(sy-gH/2-gPanY)/gZoom};}
 function hitTest(wx,wy){
   for(const n of gNodes){
+    if(n.hidden)continue;
     const dx=wx-n.x,dy=wy-n.y;
-    const hr=Math.max(n.r+4,8/gZoom);
+    const hr=Math.max(n.r+5,9/gZoom);
     if(dx*dx+dy*dy<=hr*hr)return n;
   }
   return null;
 }
+function ptSegDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+  if(len2===0)return Math.hypot(px-ax,py-ay);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function edgeHitTest(wx,wy){
+  const thresh=6/gZoom;
+  const allE=[
+    ...gEdges.map(e=>({a:e.from,b:e.to,ai:false,reason:''})),
+    ...GRAPH_AI_LINKS.map(l=>({a:l.a,b:l.b,ai:true,reason:l.reason}))
+  ];
+  for(const e of allE){
+    const na=gNodes.find(n=>n.id===e.a),nb=gNodes.find(n=>n.id===e.b);
+    if(!na||!nb||na.hidden||nb.hidden)continue;
+    if(ptSegDist(wx,wy,na.x,na.y,nb.x,nb.y)<thresh)return{...e,na,nb};
+  }
+  return null;
+}
 
+// ── Interaction ───────────────────────────────────────────────────────────────
 function onGraphWheel(e){
   e.preventDefault();
-  const factor=e.deltaY<0?1.13:.88;
-  const newZ=Math.min(Math.max(gZoom*factor,.08),8);
+  const factor=e.deltaY<0?1.12:.89;
+  const newZ=Math.min(Math.max(gZoom*factor,.06),10);
   const rect=gCanvas.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
   gPanX=(gPanX-(mx-gW/2))*(newZ/gZoom)+(mx-gW/2);
   gPanY=(gPanY-(my-gH/2))*(newZ/gZoom)+(my-gH/2);
   gZoom=newZ;drawGraph();
 }
-
 function onGraphMouseDown(e){
   if(e.button!==0)return;
   gIsDragging=true;gDragMoved=false;
   gDragLast={x:e.clientX,y:e.clientY};
   gCanvas.style.cursor='grabbing';
 }
-
 function onGraphWindowMove(e){
   if(gIsDragging){
     const dx=e.clientX-gDragLast.x,dy=e.clientY-gDragLast.y;
     if(Math.abs(dx)>2||Math.abs(dy)>2)gDragMoved=true;
     gPanX+=dx;gPanY+=dy;
-    gDragLast={x:e.clientX,y:e.clientY};drawGraph();
-  } else if(gCanvas){
-    const rect=gCanvas.getBoundingClientRect();
-    const ox=e.clientX-rect.left,oy=e.clientY-rect.top;
-    if(ox<0||oy<0||ox>gW||oy>gH)return;
-    const {x:wx,y:wy}=screenToWorld(ox,oy);
-    const hit=hitTest(wx,wy);
-    const tip=document.getElementById('graph-tip');
-    const prev=gHoverNode;gHoverNode=hit||null;
-    if(prev!==gHoverNode)drawGraph();
-    if(hit){
-      gCanvas.style.cursor='pointer';
-      const sx=hit.x*gZoom+gW/2+gPanX,sy=hit.y*gZoom+gH/2+gPanY;
-      tip.style.display='block';tip.style.left=(sx+14)+'px';tip.style.top=(sy-10)+'px';
-      tip.textContent=hit.label+(hit.mentions?` · ${hit.mentions} mentions`:'');
-    } else {
-      gCanvas.style.cursor='grab';tip.style.display='none';
-    }
+    gDragLast={x:e.clientX,y:e.clientY};drawGraph();return;
+  }
+  if(!gCanvas)return;
+  const rect=gCanvas.getBoundingClientRect();
+  const ox=e.clientX-rect.left,oy=e.clientY-rect.top;
+  if(ox<0||oy<0||ox>gW||oy>gH)return;
+  const {x:wx,y:wy}=screenToWorld(ox,oy);
+  const nodeHit=hitTest(wx,wy);
+  const prevN=gHoverNode,prevE=gHoverEdge;
+  gHoverNode=nodeHit||null;
+  gHoverEdge=nodeHit?null:edgeHitTest(wx,wy);
+  if(prevN!==gHoverNode||prevE!==gHoverEdge)drawGraph();
+  const tip=document.getElementById('graph-tip');
+  if(nodeHit){
+    gCanvas.style.cursor='pointer';
+    const sx=nodeHit.x*gZoom+gW/2+gPanX,sy=nodeHit.y*gZoom+gH/2+gPanY;
+    tip.style.display='block';tip.style.left=(sx+12)+'px';tip.style.top=(sy-12)+'px';
+    tip.textContent=nodeHit.label;
+  } else if(gHoverEdge){
+    gCanvas.style.cursor='pointer';tip.style.display='none';
+  } else {
+    gCanvas.style.cursor='grab';tip.style.display='none';
   }
 }
-
-function onGraphWindowUp(){
-  gIsDragging=false;if(gCanvas)gCanvas.style.cursor='grab';
-}
+function onGraphWindowUp(){gIsDragging=false;if(gCanvas)gCanvas.style.cursor='grab';}
 
 function onGraphClick(e){
   if(gDragMoved)return;
   const rect=gCanvas.getBoundingClientRect();
   const {x:wx,y:wy}=screenToWorld(e.clientX-rect.left,e.clientY-rect.top);
-  const hit=hitTest(wx,wy);
   const info=document.getElementById('graph-info');
-  if(!hit){info.style.display='none';return;}
+  const nodeHit=hitTest(wx,wy);
+
+  if(nodeHit){
+    openNodeInfo(nodeHit,info);return;
+  }
+  const edgeHit=edgeHitTest(wx,wy);
+  if(edgeHit){
+    openEdgeSynthesis(edgeHit,info);return;
+  }
+  info.style.display='none';
+}
+
+function openNodeInfo(hit,info){
+  info.style.display='block';
+  if(hit.id==='you'){
+    info.innerHTML=`<div class="gi-name">${hit.label}</div><div class="gi-type">You</div>
+      <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
+    return;
+  }
   if(hit.id.startsWith('c')){
-    const ct=CONTACTS.find(c=>'c'+c.id===hit.id);
-    if(!ct)return;
-    const aiDocs=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
-    info.style.display='block';
+    const ct=CONTACTS.find(c=>'c'+c.id===hit.id);if(!ct)return;
+    const conns=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
     info.innerHTML=`<div class="gi-name">${ct.name}</div><div class="gi-type">${ct.type}</div>
       <div class="gi-stat"><span>Role</span><strong>${ct.role||'—'}</strong></div>
-      <div class="gi-stat"><span>Last seen</span><strong>${ct.lastSeen}</strong></div>
-      <div class="gi-stat"><span>Meetings</span><strong>${ct.meets}</strong></div>
-      <div class="gi-stat"><span>Mentions</span><strong>${ct.mentions}</strong></div>
-      ${aiDocs.length?`<div style="margin-top:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px">AI Connections (${aiDocs.length})</div>${aiDocs.slice(0,4).map(l=>`<div style="font-size:11px;color:var(--ink-2);padding:3px 0;border-bottom:1px solid var(--border);line-height:1.4">${l.reason}</div>`).join('')}`:''}
-      <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="document.getElementById('graph-info').style.display='none'">✕ Close</div>`;
+      <div class="gi-stat"><span>Last seen</span><strong>${ct.lastSeen||'—'}</strong></div>
+      <div class="gi-stat"><span>Meetings</span><strong>${ct.meets||0}</strong></div>
+      <div class="gi-stat"><span>Connections</span><strong>${conns.length}</strong></div>
+      <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
   } else if(hit.id.startsWith('d')){
     const idx=parseInt(hit.id.slice(1));const doc=DOCS[idx];if(!doc)return;
-    const aiConns=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
-    info.style.display='block';
-    info.innerHTML=`<div class="gi-name" style="font-size:13px;line-height:1.4">${doc.name.replace(/-/g,' ')}</div>
+    const conns=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
+    const names=conns.slice(0,4).map(l=>{const oid=l.a===hit.id?l.b:l.a;const ct=CONTACTS.find(c=>'c'+c.id===oid);return ct?ct.name.split(' ')[0]:'—';}).join(', ');
+    info.innerHTML=`<div class="gi-name">${doc.name.replace(/-/g,' ')}</div>
       <div class="gi-type">Document</div>
-      <div class="gi-stat"><span>Date</span><strong>${doc.date}</strong></div>
-      <div class="gi-stat"><span>Size</span><strong>${doc.size}</strong></div>
-      ${aiConns.length?`<div style="margin-top:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px">Connected to</div>${aiConns.slice(0,5).map(l=>{const cid=l.a===hit.id?l.b:l.a;const ct=CONTACTS.find(c=>'c'+c.id===cid);return`<div style="font-size:11px;color:var(--ink-2);padding:3px 0;border-bottom:1px solid var(--border)">${ct?ct.name.split(' ')[0]:'—'} · ${l.reason}</div>`;}).join('')}`:''}
-      <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="document.getElementById('graph-info').style.display='none'">✕ Close</div>`;
+      <div class="gi-stat"><span>Date</span><strong>${doc.date||'—'}</strong></div>
+      <div class="gi-stat"><span>Connections</span><strong>${conns.length}</strong></div>
+      ${names?`<div class="gi-stat"><span>Linked to</span><strong style="font-size:11px">${names}</strong></div>`:''}
+      <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
   }
+}
+
+function openEdgeSynthesis(edge,info){
+  const aName=edge.na.label,bName=edge.nb.label;
+  info.style.display='block';
+  info.innerHTML=`<div class="gi-name" style="font-size:13px">${aName} ↔ ${bName}</div>
+    <div class="gi-type">Connection Analysis</div>
+    <div class="gi-synth" id="edge-synth">Synthesizing…</div>
+    <div style="margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
+  const el=document.getElementById('edge-synth');
+  let full='';
+  callAI(
+    `In 2-3 focused sentences, synthesize the strategic connection between "${aName}" and "${bName}" based on everything you know about them. What's the key relationship, any tension or opportunity, and what action (if any) should I take?`,
+    [],
+    chunk=>{full+=chunk;el.innerHTML=renderMd(full);},
+    null,
+    err=>{el.textContent='Error: '+err;}
+  );
 }
 </script>
 </body>
