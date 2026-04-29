@@ -701,11 +701,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
       <div class="graph-wrap" id="graph-wrap">
         <canvas id="graph-canvas"></canvas>
         <div class="graph-legend">
-          <div class="g-legend-title">Connection types</div>
+          <div class="g-legend-title">Node types</div>
           <div class="gli"><div class="gld" style="background:#14120B"></div>You</div>
           <div class="gli"><div class="gld" style="background:#4A7FD4"></div>Person</div>
-          <div class="gli"><div class="gld" style="background:#E05252;border-radius:3px"></div>Company</div>
-          <div class="gli"><div class="gld" style="background:#C49A3C;clip-path:polygon(50% 0%,100% 100%,0% 100%)"></div>Document</div>
+          <div class="gli"><div class="gld" style="background:#E05252"></div>Company</div>
+          <div class="gli"><div class="gld" style="background:#C49A3C;position:relative"><div style="position:absolute;inset:30%;border-radius:50%;background:rgba(255,255,255,.5)"></div></div>Document</div>
           <div id="graph-ai-status" style="font-size:10px;color:var(--ink-3);margin-top:4px;font-style:italic"></div>
         </div>
         <div class="graph-tip" id="graph-tip"></div>
@@ -1564,19 +1564,19 @@ function layoutGraph(){
   const seed=42;let rng=seed;
   const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
 
-  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:22,vx:0,vy:0}];
+  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:10,vx:0,vy:0}];
   CONTACTS.forEach((c,i)=>{
-    const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.4;
-    const dist=160+(rand()-.5)*40;
-    const r=Math.min(10+c.mentions*.55,20);
+    const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.6;
+    const dist=120+(rand()-.5)*60;
+    const r=Math.min(5+c.mentions*.2,9);
     gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,role:c.role,
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
   });
   DOCS.forEach((d,i)=>{
-    const angle=(i/DOCS.length)*Math.PI*2+(rand()-.5)*.2;
-    const dist=200+(rand()-.5)*30;
-    const short=d.name.replace(/-/g,' ').slice(0,18);
-    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
+    const angle=rand()*Math.PI*2;
+    const dist=80+rand()*260;
+    const short=d.name.replace(/-/g,' ').slice(0,20);
+    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:4,vx:0,vy:0});
   });
 
   gEdges=[
@@ -1590,77 +1590,52 @@ function layoutGraph(){
     {from:'c7',to:'c17',w:2},{from:'c4',to:'c13',w:2},
     {from:'c18',to:'c19',w:4},{from:'c25',to:'c29',w:3},
   ];
-  runForceLayout(80);
+  runForceLayout(120);
 }
 
-function runContactForce(iters){
-  // Force layout for contacts/companies only — docs placed separately
-  const contacts=gNodes.filter(n=>n.type!=='document');
-  const nc=contacts.length;
-  if(nc<2)return;
-  const k=Math.sqrt(400*400/nc)*0.8;
+function runFullForce(iters){
+  const nodes=gNodes;
+  const n=nodes.length;
+  if(n<2)return;
+  const nodeMap=new Map(nodes.map(nd=>[nd.id,nd]));
+  const edges=[];
+  gEdges.forEach(e=>edges.push({a:e.from,b:e.to,str:1.0}));
+  GRAPH_AI_LINKS.forEach(l=>edges.push({a:l.a,b:l.b,str:0.55}));
+  const k=Math.sqrt(680*680/n)*1.15;
   for(let it=0;it<iters;it++){
-    const cool=Math.max(0.05,1-it/iters);
-    contacts.forEach(n=>{n.vx=0;n.vy=0;});
-    for(let i=0;i<nc;i++){
-      for(let j=i+1;j<nc;j++){
-        const dx=contacts[i].x-contacts[j].x,dy=contacts[i].y-contacts[j].y;
+    const cool=Math.max(0.04,1-it/iters);
+    const temp=k*cool*1.8;
+    nodes.forEach(nd=>{nd.vx=0;nd.vy=0;});
+    for(let i=0;i<n;i++){
+      for(let j=i+1;j<n;j++){
+        const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
         const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
         const f=k*k/d;
-        contacts[i].vx+=dx/d*f;contacts[i].vy+=dy/d*f;
-        contacts[j].vx-=dx/d*f;contacts[j].vy-=dy/d*f;
+        nodes[i].vx+=dx/d*f;nodes[i].vy+=dy/d*f;
+        nodes[j].vx-=dx/d*f;nodes[j].vy-=dy/d*f;
       }
     }
-    gEdges.forEach(e=>{
-      const a=contacts.find(n=>n.id===e.from),b=contacts.find(n=>n.id===e.to);
+    edges.forEach(e=>{
+      const a=nodeMap.get(e.a),b=nodeMap.get(e.b);
       if(!a||!b)return;
       const dx=b.x-a.x,dy=b.y-a.y;
       const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
-      const f=d*d/k*0.4;
+      const f=d*d/k*e.str*0.3;
       if(a.id!=='you'){a.vx+=dx/d*f;a.vy+=dy/d*f;}
       if(b.id!=='you'){b.vx-=dx/d*f;b.vy-=dy/d*f;}
     });
-    contacts.forEach(n=>{
-      if(n.id==='you')return;
-      n.vx-=n.x*0.04;n.vy-=n.y*0.04;
-      const sp=Math.sqrt(n.vx*n.vx+n.vy*n.vy),maxD=k*cool*2;
-      if(sp>maxD){n.vx=n.vx/sp*maxD;n.vy=n.vy/sp*maxD;}
-      n.x+=n.vx;n.y+=n.vy;
+    nodes.forEach(nd=>{
+      if(nd.id==='you')return;
+      nd.vx-=nd.x*0.025;nd.vy-=nd.y*0.025;
+      const sp=Math.sqrt(nd.vx*nd.vx+nd.vy*nd.vy);
+      if(sp>temp){nd.vx=nd.vx/sp*temp;nd.vy=nd.vy/sp*temp;}
+      nd.x+=nd.vx;nd.y+=nd.vy;
     });
   }
 }
 
-function placeDocsByConnections(){
-  // Each doc goes near the centroid of its connected contacts; unconnected docs form a tidy inner ring
-  let rng2=7919;
-  const r2=()=>{rng2=(rng2*1664525+1013904223)&0xffffffff;return(rng2>>>0)/4294967296;};
-  const unconnected=[];
-  gNodes.filter(n=>n.type==='document').forEach(doc=>{
-    const links=GRAPH_AI_LINKS.filter(l=>l.a===doc.id||l.b===doc.id);
-    if(links.length===0){unconnected.push(doc);return;}
-    let cx=0,cy=0,cnt=0;
-    links.forEach(l=>{
-      const oid=l.a===doc.id?l.b:l.a;
-      const other=gNodes.find(n=>n.id===oid);
-      if(other){cx+=other.x;cy+=other.y;cnt++;}
-    });
-    if(cnt>0){
-      const angle=r2()*Math.PI*2;
-      const dist=38+r2()*28;
-      doc.x=cx/cnt+Math.cos(angle)*dist;
-      doc.y=cy/cnt+Math.sin(angle)*dist;
-    }
-  });
-  // Unconnected docs: evenly spaced ring at radius ~200
-  unconnected.forEach((doc,i)=>{
-    const angle=(i/Math.max(unconnected.length,1))*Math.PI*2;
-    doc.x=Math.cos(angle)*200;doc.y=Math.sin(angle)*200;
-  });
-}
-
 function runForceLayout(iters){
-  runContactForce(iters);
-  placeDocsByConnections();
+  runFullForce(iters);
   fitGraph();
 }
 
@@ -1668,12 +1643,13 @@ function fitGraph(){
   if(!gNodes.length||!gW||!gH)return;
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   gNodes.forEach(n=>{
-    minX=Math.min(minX,n.x-n.r);maxX=Math.max(maxX,n.x+n.r);
+    const lpad=60;
+    minX=Math.min(minX,n.x-n.r-lpad);maxX=Math.max(maxX,n.x+n.r+lpad);
     minY=Math.min(minY,n.y-n.r);maxY=Math.max(maxY,n.y+n.r);
   });
   const pad=60,w=maxX-minX,h=maxY-minY;
   if(w<=0||h<=0)return;
-  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,2.5);
+  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,2.2);
   gPanX=-(minX+w/2)*gZoom;gPanY=-(minY+h/2)*gZoom;
 }
 
@@ -1688,7 +1664,7 @@ async function fetchAIConnections(){
     const data=await res.json();
     if(data.links&&data.links.length>0){
       GRAPH_AI_LINKS=data.links;
-      placeDocsByConnections();
+      runFullForce(80);
       fitGraph();
       drawGraph();
       if(statusEl)statusEl.textContent=`${data.links.length} connections mapped by AI`;
@@ -1701,10 +1677,6 @@ function drawGraph(){
   const W=gW,H=gH;
   gCtx.clearRect(0,0,W,H);
   gCtx.fillStyle='#F5F1EA';gCtx.fillRect(0,0,W,H);
-  // Grid in screen space
-  gCtx.strokeStyle='rgba(0,0,0,0.022)';gCtx.lineWidth=1;
-  for(let x=0;x<W;x+=44){gCtx.beginPath();gCtx.moveTo(x,0);gCtx.lineTo(x,H);gCtx.stroke();}
-  for(let y=0;y<H;y+=44){gCtx.beginPath();gCtx.moveTo(0,y);gCtx.lineTo(W,y);gCtx.stroke();}
 
   gCtx.save();
   gCtx.translate(W/2+gPanX,H/2+gPanY);
@@ -1713,16 +1685,28 @@ function drawGraph(){
   const hovId=gHoverNode?gHoverNode.id:null;
   const connSet=hovId?getConnected(hovId):null;
 
-  // AI links (dotted gold)
+  // Draw all edges first
+  gEdges.forEach(e=>{
+    const a=gNodes.find(n=>n.id===e.from),b=gNodes.find(n=>n.id===e.to);
+    if(!a||!b)return;
+    const active=hovId&&connSet&&(connSet.has(e.from)&&connSet.has(e.to));
+    const dim=hovId&&!active;
+    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
+    gCtx.strokeStyle=dim?'rgba(196,154,60,.04)':active?'rgba(196,154,60,.7)':'rgba(196,154,60,.22)';
+    gCtx.lineWidth=active?1.5:0.8;gCtx.stroke();
+  });
+
+  // AI links
   GRAPH_AI_LINKS.forEach(lk=>{
     const a=gNodes.find(n=>n.id===lk.a),b=gNodes.find(n=>n.id===lk.b);
     if(!a||!b)return;
     const active=hovId&&(hovId===lk.a||hovId===lk.b);
     const dim=hovId&&!active;
-    gCtx.save();gCtx.setLineDash([3,6]);
+    gCtx.save();
+    if(!active)gCtx.setLineDash([2,5]);
     gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
-    gCtx.strokeStyle=dim?'rgba(196,154,60,.05)':active?'rgba(196,154,60,.85)':'rgba(196,154,60,.18)';
-    gCtx.lineWidth=active?1.8:0.9;gCtx.stroke();
+    gCtx.strokeStyle=dim?'rgba(196,154,60,.03)':active?'rgba(196,154,60,.75)':'rgba(196,154,60,.13)';
+    gCtx.lineWidth=active?1.4:0.7;gCtx.stroke();
     gCtx.restore();
     if(active){
       const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
@@ -1733,63 +1717,43 @@ function drawGraph(){
     }
   });
 
-  // Main edges
-  gEdges.forEach(e=>{
-    const a=gNodes.find(n=>n.id===e.from),b=gNodes.find(n=>n.id===e.to);
-    if(!a||!b)return;
-    const active=hovId&&connSet&&(connSet.has(e.from)||connSet.has(e.to));
-    const alpha=hovId?(active?.5:.04):.1+e.w*.008;
-    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
-    gCtx.strokeStyle=`rgba(196,154,60,${alpha})`;
-    gCtx.lineWidth=hovId?(active?2:.4):.6+e.w*.08;gCtx.stroke();
-  });
-
-  // Nodes
+  // Nodes + labels
   gNodes.forEach(n=>{
     const isHov=n.id===hovId;
     const dimmed=hovId&&!isHov&&connSet&&!connSet.has(n.id);
-    gCtx.globalAlpha=dimmed?.12:1;
     const col=n.type==='user'?'#14120B':n.type==='person'?'#4A7FD4':n.type==='company'?'#E05252':'#C49A3C';
+    gCtx.globalAlpha=dimmed?.1:1;
+
     if(isHov){
-      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+7,0,Math.PI*2);
-      gCtx.strokeStyle=col+'88';gCtx.lineWidth=2.5;gCtx.stroke();
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+6,0,Math.PI*2);
+      gCtx.strokeStyle=col+'55';gCtx.lineWidth=2;gCtx.stroke();
     }
+
+    // All nodes are circles
+    gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+(isHov?2:0),0,Math.PI*2);
+    gCtx.fillStyle=col;gCtx.fill();
+
+    // Inner dot for documents (visual distinction without shape change)
     if(n.type==='document'){
-      const r=n.r+(isHov?3:0);
-      gCtx.fillStyle=col;
-      gCtx.beginPath();gCtx.moveTo(n.x,n.y-r);gCtx.lineTo(n.x+r,n.y+r);gCtx.lineTo(n.x-r,n.y+r);gCtx.closePath();
-      gCtx.fill();
-    } else if(n.type==='company'){
-      const r=n.r+(isHov?3:0);
-      gCtx.fillStyle=col;gCtx.beginPath();
-      gCtx.roundRect?gCtx.roundRect(n.x-r,n.y-r,r*2,r*2,3):gCtx.rect(n.x-r,n.y-r,r*2,r*2);
-      gCtx.fill();
-    } else {
-      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+(isHov?3:0),0,Math.PI*2);
-      gCtx.fillStyle=col;gCtx.fill();
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r*.38,0,Math.PI*2);
+      gCtx.fillStyle='rgba(255,255,255,.55)';gCtx.fill();
     }
+
     if(n.type==='user'){
-      gCtx.globalAlpha=1;gCtx.fillStyle='#F5F1EA';
-      gCtx.font='bold 7px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
+      gCtx.fillStyle='#F5F1EA';
+      gCtx.font='bold 6px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       gCtx.fillText('YOU',n.x,n.y);
     }
-    // Labels: always show for contacts/companies, show for docs only when hovered
-    if(n.type!=='document'||isHov){
-      gCtx.globalAlpha=dimmed?.12:1;
-      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.72)';
-      const fs=isHov?11:Math.min(Math.max(n.r*.65,8),11);
+
+    // Labels always visible, to the right of node
+    if(n.type!=='user'){
+      gCtx.globalAlpha=dimmed?.08:(isHov?1:.75);
+      const fs=isHov?10:9;
       gCtx.font=`${isHov?600:400} ${fs}px DM Sans,sans-serif`;
-      gCtx.textAlign='center';gCtx.textBaseline='top';
-      const lbl=n.type==='user'?'':(n.label.split(' ')[0].slice(0,14));
-      if(lbl)gCtx.fillText(lbl,n.x,n.y+n.r+(isHov?5:3));
-    }
-    // Tiny label for docs so they're visible
-    if(n.type==='document'&&!isHov&&!dimmed){
-      gCtx.globalAlpha=.45;
-      gCtx.fillStyle='rgba(20,18,11,.6)';
-      gCtx.font='7px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='top';
-      gCtx.fillText(n.label.slice(0,12),n.x,n.y+n.r+2);
-      gCtx.globalAlpha=1;
+      gCtx.textAlign='left';gCtx.textBaseline='middle';
+      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.78)';
+      const lbl=n.label.split(' ').slice(0,2).join(' ').slice(0,18);
+      gCtx.fillText(lbl,n.x+n.r+4,n.y);
     }
     gCtx.globalAlpha=1;
   });
