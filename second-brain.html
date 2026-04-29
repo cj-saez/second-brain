@@ -328,21 +328,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .do-resolved{background:rgba(34,197,94,.1);color:var(--green)}
 
 /* GRAPH */
-.graph-wrap{flex:1;position:relative;overflow:hidden;background:#0d1117}
+.graph-wrap{flex:1;position:relative;overflow:hidden}
 #graph-canvas{width:100%;height:100%;cursor:grab;display:block}
 #graph-canvas:active{cursor:grabbing}
-.graph-legend{position:absolute;bottom:20px;left:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(12px)}
-.g-legend-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px}
-.gli{display:flex;align-items:center;gap:9px;font-size:12px;color:rgba(255,255,255,.6)}
+.graph-legend{position:absolute;bottom:20px;left:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;flex-direction:column;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.07)}
+.g-legend-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.gli{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--ink-2)}
 .gld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.graph-tip{position:absolute;background:rgba(15,17,26,.9);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.9);padding:7px 13px;border-radius:8px;font-size:12px;pointer-events:none;display:none;white-space:nowrap;backdrop-filter:blur(8px);z-index:10}
-.graph-info{position:absolute;top:20px;right:20px;background:#161b27;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;width:260px;display:none;box-shadow:0 12px 48px rgba(0,0,0,.5)}
-.gi-name{font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;line-height:1.35}
-.gi-type{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px}
-.gi-stat{display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.45);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
-.gi-stat strong{color:rgba(255,255,255,.8)}
+.graph-tip{position:absolute;background:var(--ink);color:var(--bg);padding:7px 13px;border-radius:8px;font-size:12px;pointer-events:none;display:none;white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.graph-info{position:absolute;top:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:260px;display:none;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+.gi-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px;line-height:1.35}
+.gi-type{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px}
+.gi-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--border)}
+.gi-stat strong{color:var(--ink)}
 .gi-stat:last-child{border-bottom:none}
-.gi-synth{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;margin-top:10px;min-height:40px}
+.gi-synth{font-size:13px;color:var(--ink-2);line-height:1.6;margin-top:10px;min-height:40px}
 
 /* BRIEF CHAT */
 .brief-chat-wrap{border-top:1px solid var(--border);margin:32px 52px 0;padding:24px 0 40px}
@@ -704,11 +704,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
         <canvas id="graph-canvas"></canvas>
         <div class="graph-legend">
           <div class="g-legend-title">Node types</div>
-          <div class="gli"><div class="gld" style="background:#f1f5f9"></div>You</div>
-          <div class="gli"><div class="gld" style="background:#60a5fa"></div>Person</div>
-          <div class="gli"><div class="gld" style="background:#4ade80"></div>Company</div>
-          <div class="gli"><div class="gld" style="background:#c084fc"></div>Document</div>
-          <div id="graph-ai-status" style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;font-style:italic"></div>
+          <div class="gli"><div class="gld" style="background:#14120B"></div>You</div>
+          <div class="gli"><div class="gld" style="background:#4A7FD4"></div>Person</div>
+          <div class="gli"><div class="gld" style="background:#E05252"></div>Company</div>
+          <div class="gli"><div class="gld" style="background:#C49A3C"></div>Document</div>
+          <div id="graph-ai-status" style="font-size:10px;color:var(--ink-3);margin-top:4px;font-style:italic"></div>
         </div>
         <div class="graph-tip" id="graph-tip"></div>
         <div class="graph-info" id="graph-info"></div>
@@ -1571,12 +1571,16 @@ function layoutGraph(){
     const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.3;
     const dist=55+(rand()-.5)*20;
     gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,role:c.role,
-      x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
+      x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:7,vx:0,vy:0});
   });
-  // Documents added after AI links load — initially hidden
+  // Docs in a golden-angle spiral so they fill space naturally — all visible from start
+  const goldenAngle=2.39996;
   DOCS.forEach((d,i)=>{
+    const angle=i*goldenAngle;
+    const radius=110+Math.sqrt(i+1)*18;
     const short=d.name.replace(/-/g,' ').slice(0,22);
-    gNodes.push({id:'d'+i,label:short,type:'document',x:0,y:0,r:5,vx:0,vy:0,hidden:true});
+    gNodes.push({id:'d'+i,label:short,type:'document',
+      x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,r:5,vx:0,vy:0});
   });
 
   gEdges=[
@@ -1687,16 +1691,15 @@ function fitGraph(){
   if(!gW||!gH)return;
   const visible=gNodes.filter(n=>!n.hidden);
   if(!visible.length)return;
-  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  visible.forEach(n=>{
-    minX=Math.min(minX,n.x-n.r);
-    maxX=Math.max(maxX,n.x+n.r+70); // room for labels
-    minY=Math.min(minY,n.y-n.r);
-    maxY=Math.max(maxY,n.y+n.r);
-  });
-  const pad=48,w=maxX-minX,h=maxY-minY;
+  // Use 95th-percentile bounds so a handful of outliers can't force a zoom-out
+  const xs=visible.map(n=>n.x).sort((a,b)=>a-b);
+  const ys=visible.map(n=>n.y).sort((a,b)=>a-b);
+  const n=xs.length,trim=Math.max(1,Math.floor(n*.04));
+  const minX=xs[trim]-10, maxX=xs[n-1-trim]+80; // +80 for labels
+  const minY=ys[trim]-10, maxY=ys[n-1-trim]+10;
+  const w=maxX-minX,h=maxY-minY;
   if(w<=0||h<=0)return;
-  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,3);
+  gZoom=Math.min((gW-80)/w,(gH-80)/h,2.5);
   gPanX=-(minX+w/2)*gZoom;gPanY=-(minY+h/2)*gZoom;
 }
 
@@ -1725,12 +1728,12 @@ async function fetchAIConnections(){
 }
 
 // ── Drawing ───────────────────────────────────────────────────────────────────
-const G_COL={user:'#f1f5f9',person:'#60a5fa',company:'#4ade80',document:'#c084fc'};
+const G_COL={user:'#14120B',person:'#4A7FD4',company:'#E05252',document:'#C49A3C'};
 
 function drawGraph(){
   if(!gCtx||!gW||!gH)return;
   gCtx.clearRect(0,0,gW,gH);
-  gCtx.fillStyle='#0d1117';gCtx.fillRect(0,0,gW,gH);
+  gCtx.fillStyle='#F5F1EA';gCtx.fillRect(0,0,gW,gH);
   gCtx.save();
   gCtx.translate(gW/2+gPanX,gH/2+gPanY);
   gCtx.scale(gZoom,gZoom);
@@ -1754,7 +1757,7 @@ function drawGraph(){
     gCtx.save();
     if(e.ai&&!isHovEdge)gCtx.setLineDash([2,4]);
     gCtx.beginPath();gCtx.moveTo(na.x,na.y);gCtx.lineTo(nb.x,nb.y);
-    gCtx.strokeStyle=isHovEdge?'rgba(255,255,255,.9)':dim?'rgba(255,255,255,.04)':active?'rgba(255,255,255,.55)':'rgba(255,255,255,.14)';
+    gCtx.strokeStyle=isHovEdge?'rgba(196,154,60,.9)':dim?'rgba(196,154,60,.04)':active?'rgba(196,154,60,.6)':'rgba(196,154,60,.2)';
     gCtx.lineWidth=isHovEdge?2:active?1.5:0.8;
     gCtx.stroke();
     gCtx.restore();
@@ -1762,8 +1765,8 @@ function drawGraph(){
       const mx=(na.x+nb.x)/2,my=(na.y+nb.y)/2;
       gCtx.font='9px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       const tw=gCtx.measureText(e.reason).width+14;
-      gCtx.fillStyle='rgba(255,255,255,.13)';gCtx.fillRect(mx-tw/2,my-10,tw,20);
-      gCtx.fillStyle='rgba(255,255,255,.85)';gCtx.fillText(e.reason,mx,my);
+      gCtx.fillStyle='rgba(196,154,60,.9)';gCtx.fillRect(mx-tw/2,my-10,tw,20);
+      gCtx.fillStyle='#fff';gCtx.fillText(e.reason,mx,my);
     }
   });
 
@@ -1782,14 +1785,14 @@ function drawGraph(){
     gCtx.fillStyle=col;gCtx.fill();
 
     if(n.type==='user'){
-      gCtx.fillStyle='#0d1117';
+      gCtx.fillStyle='#F5F1EA';
       gCtx.font='bold 6px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       gCtx.fillText('YOU',n.x,n.y);
     } else {
-      gCtx.globalAlpha=dimmed?.08:(isHov?1:.75);
+      gCtx.globalAlpha=dimmed?.08:(isHov?1:.8);
       gCtx.font=`${isHov?500:400} ${isHov?11:10}px DM Sans,sans-serif`;
       gCtx.textAlign='left';gCtx.textBaseline='middle';
-      gCtx.fillStyle=isHov?col:'rgba(255,255,255,.75)';
+      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.72)';
       gCtx.fillText(n.label.split(' ').slice(0,2).join(' ').slice(0,20),n.x+n.r+4,n.y);
     }
     gCtx.globalAlpha=1;
@@ -1914,7 +1917,7 @@ function openNodeInfo(hit,info){
       <div class="gi-stat"><span>Last seen</span><strong>${ct.lastSeen||'—'}</strong></div>
       <div class="gi-stat"><span>Meetings</span><strong>${ct.meets||0}</strong></div>
       <div class="gi-stat"><span>Connections</span><strong>${conns.length}</strong></div>
-      <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
+      <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
   } else if(hit.id.startsWith('d')){
     const idx=parseInt(hit.id.slice(1));const doc=DOCS[idx];if(!doc)return;
     const conns=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
@@ -1924,7 +1927,7 @@ function openNodeInfo(hit,info){
       <div class="gi-stat"><span>Date</span><strong>${doc.date||'—'}</strong></div>
       <div class="gi-stat"><span>Connections</span><strong>${conns.length}</strong></div>
       ${names?`<div class="gi-stat"><span>Linked to</span><strong style="font-size:11px">${names}</strong></div>`:''}
-      <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
+      <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
   }
 }
 
@@ -1934,7 +1937,7 @@ function openEdgeSynthesis(edge,info){
   info.innerHTML=`<div class="gi-name" style="font-size:13px">${aName} ↔ ${bName}</div>
     <div class="gi-type">Connection Analysis</div>
     <div class="gi-synth" id="edge-synth">Synthesizing…</div>
-    <div style="margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
+    <div style="margin-top:14px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="this.closest('.graph-info').style.display='none'">✕ Close</div>`;
   const el=document.getElementById('edge-synth');
   let full='';
   callAI(
