@@ -448,6 +448,23 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
   </div>
 </div>
 
+<!-- BUILD SCREEN -->
+<div id="build-screen" class="screen" style="background:var(--bg);align-items:center;justify-content:center;flex-direction:column">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(196,154,60,0.07) 0%,transparent 70%);pointer-events:none"></div>
+  <div style="position:relative;text-align:center;max-width:420px;padding:24px">
+    <svg width="32" height="42" viewBox="0 0 28 36" fill="none" style="margin-bottom:28px">
+      <ellipse cx="14" cy="24" rx="11" ry="11" fill="#C49A3C" opacity=".15"/>
+      <path d="M14 2C10.5 8 5 15 5 22C5 28.627 9.03 34 14 34C18.97 34 23 28.627 23 22C23 15 17.5 8 14 2Z" fill="#C49A3C"/>
+    </svg>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--ink);margin-bottom:8px">Building your Second Brain</div>
+    <div id="build-sub" style="font-size:14px;color:var(--ink-3);margin-bottom:48px;min-height:20px">Personalizing your intelligence layer…</div>
+    <div id="build-steps" style="display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:44px"></div>
+    <div style="width:100%;height:2px;background:var(--border);border-radius:2px;overflow:hidden">
+      <div id="build-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .6s ease"></div>
+    </div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app-screen" class="screen">
   <div class="sidebar" id="sidebar">
@@ -686,9 +703,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
         <div class="graph-legend">
           <div class="g-legend-title">Connection types</div>
           <div class="gli"><div class="gld" style="background:#14120B"></div>You</div>
-          <div class="gli"><div class="gld" style="background:#C49A3C"></div>Person</div>
-          <div class="gli"><div class="gld" style="background:#F59E0B"></div>Company</div>
-          <div class="gli"><div class="gld" style="background:#9C9890"></div>Document</div>
+          <div class="gli"><div class="gld" style="background:#4A7FD4"></div>Person</div>
+          <div class="gli"><div class="gld" style="background:#E05252;border-radius:3px"></div>Company</div>
+          <div class="gli"><div class="gld" style="background:#C49A3C;clip-path:polygon(50% 0%,100% 100%,0% 100%)"></div>Document</div>
         </div>
         <div class="graph-tip" id="graph-tip"></div>
         <div class="graph-info" id="graph-info"></div>
@@ -958,11 +975,45 @@ function enterApp(){
   const useCase=ucEl?ucEl.querySelector('.uc-t').textContent:'Executive';
   window.userPrefs={name,tracks,useCase};
   document.getElementById('onboarding-screen').classList.remove('active');
-  document.getElementById('app-screen').classList.add('active');
-  initApp(name);
-  document.querySelector('.ni-badge').classList.add('show');
-  // Reorder priority stack based on selected tracks
-  applyTrackPersonalization(trackEls.map(c=>c.textContent));
+  document.getElementById('build-screen').classList.add('active');
+  runBuildAnimation(name,tracks,useCase,trackEls.map(c=>c.textContent));
+}
+
+function runBuildAnimation(name,tracks,useCase,selectedTracks){
+  const steps=[
+    {text:'Indexing contacts and relationship history',pct:18},
+    {text:'Connecting documents to people and deals',pct:36},
+    {text:'Calibrating priority stack for '+useCase.split(' ')[0].toLowerCase()+'s',pct:54},
+    {text:'Building knowledge graph from your vault',pct:72},
+    {text:tracks?'Weighting signals for: '+tracks.slice(0,40):'Loading intelligence signals',pct:88},
+    {text:'Second Brain ready — welcome, '+name,pct:100},
+  ];
+  const bar=document.getElementById('build-bar');
+  const stepsEl=document.getElementById('build-steps');
+  const sub=document.getElementById('build-sub');
+  let i=0;
+  function next(){
+    if(i>=steps.length){
+      setTimeout(()=>{
+        document.getElementById('build-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active');
+        initApp(name);
+        document.querySelector('.ni-badge').classList.add('show');
+        applyTrackPersonalization(selectedTracks);
+      },400);
+      return;
+    }
+    const s=steps[i];
+    bar.style.width=s.pct+'%';
+    sub.textContent=s.text+'…';
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);animation:fadeUp .3s ease';
+    row.innerHTML=`<div style="width:16px;height:16px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="8" height="8" viewBox="0 0 10 8" fill="none"><polyline points="1,4 4,7 9,1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>${s.text}</span>`;
+    stepsEl.appendChild(row);
+    i++;
+    setTimeout(next,i===steps.length?600:520);
+  }
+  next();
 }
 
 function applyTrackPersonalization(selectedTracks){
@@ -1299,24 +1350,27 @@ function buildVault(){
   });
 }
 function openVaultDoc(d,i){
-  const s=DOC_SUMMARIES[d.name];
   const panel=document.getElementById('vault-panel');
   const inner=document.getElementById('vault-panel-inner');
   panel.style.width='360px';panel.style.borderLeftWidth='1px';
-  const content=s?`
+  inner.innerHTML=`
+    <div style="font-size:11px;color:var(--ink-3);cursor:pointer;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px" onclick="document.getElementById('vault-panel').style.width='0';document.getElementById('vault-panel').style.borderLeftWidth='0'">← Close</div>
     <div style="font-size:32px;margin-bottom:16px">${d.icon}</div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:4px;line-height:1.3">${d.name.replace(/-/g,' ')}</div>
     <div style="font-size:12px;color:var(--ink-3);margin-bottom:24px">${d.date} · ${d.size}</div>
-    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Summary</div>
-    <div style="font-size:13px;color:var(--ink-2);line-height:1.65;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:20px">${s.summary}</div>
-    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Key points</div>
-    <div style="margin-bottom:20px">${s.points.map(p=>`<div style="font-size:13px;color:var(--ink);line-height:1.6;padding-left:16px;position:relative;margin-bottom:5px"><span style="position:absolute;left:0;color:var(--accent);font-size:16px;line-height:1.3">·</span>${p}</div>`).join('')}</div>
-    <div style="background:var(--gold-glow);border:1px solid var(--accent-d);border-radius:var(--rs);padding:14px">
-      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px">AI insight</div>
-      <div style="font-size:13px;color:var(--ink-2);line-height:1.6">${s.ai}</div>
-    </div>`
-  :`<div style="font-size:32px;margin-bottom:16px">${d.icon}</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:4px">${d.name.replace(/-/g,' ')}</div><div style="font-size:12px;color:var(--ink-3);margin-bottom:20px">${d.date} · ${d.size}</div><div style="font-size:13px;color:var(--ink-3);font-style:italic">Summary not yet available.</div>`;
-  inner.innerHTML=`<div style="font-size:11px;color:var(--ink-3);cursor:pointer;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px" onclick="document.getElementById('vault-panel').style.width='0';document.getElementById('vault-panel').style.borderLeftWidth='0'">← Close</div>${content}`;
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">AI Summary</div>
+    <div id="vault-ai-out" style="font-size:13px;color:var(--ink-2);line-height:1.65;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;min-height:80px">
+      <span style="opacity:.4;font-style:italic">Summarizing…</span>
+    </div>`;
+  const out=document.getElementById('vault-ai-out');
+  let full='';
+  callAI(
+    `Summarize the document "${d.name.replace(/-/g,' ')}" in 3-5 concise sentences. Focus on what it contains, who it involves, why it matters right now, and any time-sensitive items. Be specific — reference real names, numbers, and dates from your context.`,
+    [],
+    chunk=>{if(!full)out.textContent='';full+=chunk;out.textContent=full;},
+    null,
+    err=>{out.textContent='Could not summarize: '+err;}
+  );
 }
 
 // ===== CALENDAR PREP PANEL =====
@@ -1383,9 +1437,47 @@ function buildWatchlist(){
   WATCHLIST.forEach((w,i)=>{
     const div=document.createElement('div');
     div.className=`wcard ${riskMap[w.risk]}`;div.style.animationDelay=(i*60)+'ms';
-    div.innerHTML=`<div class="wcard-top"><div class="wcard-icon">${w.icon}</div><div class="wcard-stage">${w.stage}</div></div><div class="wcard-name">${w.name}</div><div class="wcard-update">${w.update}</div><div class="wcard-risk ${riskClass[w.risk]}"><div class="wr-dot"></div>${riskLabel[w.risk]}</div>`;
+    div.innerHTML=`<div class="wcard-top"><div class="wcard-icon">${w.icon}</div><div class="wcard-stage">${w.stage}</div></div><div class="wcard-name">${w.name}</div><div class="wcard-update">${w.update}</div><div class="wcard-risk ${riskClass[w.risk]}"><div class="wr-dot"></div>${riskLabel[w.risk]}</div><div style="margin-top:14px;display:flex;gap:8px"><button onclick="event.stopPropagation();openWatchItem('${w.id}')" style="flex:1;background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);padding:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all var(--tr)" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--ink)'">View details</button><button onclick="event.stopPropagation();askAboutWatch('${w.name.replace(/'/g,"\\'")}')" style="flex:1;background:transparent;color:var(--accent);border:1px solid var(--accent-d);border-radius:var(--rs);padding:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all var(--tr)" onmouseover="this.style.background='var(--accent-d)'" onmouseout="this.style.background='transparent'">Ask AI →</button></div>`;
+    div.querySelector('.wcard-name').style.cursor='pointer';
     g.appendChild(div);
   });
+}
+
+function openWatchItem(id){
+  const w=WATCHLIST.find(x=>String(x.id)===String(id));if(!w)return;
+  const modal=document.getElementById('detail-modal');
+  const content=document.getElementById('dm-content');
+  const riskColor={high:'var(--red)',med:'var(--amber)',low:'var(--green)'};
+  content.innerHTML=`
+    <div style="font-size:28px;margin-bottom:12px">${w.icon}</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);margin-bottom:4px">${w.name}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+      <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--ink-3);padding:3px 10px;border-radius:20px">${w.stage}</span>
+      <span style="font-size:11px;font-weight:600;color:${riskColor[w.risk]}">${w.risk==='high'?'High risk':w.risk==='med'?'Medium risk':'Low risk'}</span>
+    </div>
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Status</div>
+    <div style="font-size:14px;color:var(--ink-2);line-height:1.65;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:24px">${w.update}</div>
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">AI briefing</div>
+    <div id="watch-ai-out" style="font-size:13px;color:var(--ink-2);line-height:1.65;background:var(--gold-glow);border:1px solid var(--accent-d);border-radius:var(--rs);padding:14px;margin-bottom:20px;min-height:60px"><span style="opacity:.4;font-style:italic">Loading…</span></div>
+    <button onclick="askAboutWatch('${w.name.replace(/'/g,"\\'")}');closeModal();" style="width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer">Ask AI about this →</button>`;
+  modal.style.display='flex';
+  const out=document.getElementById('watch-ai-out');
+  let full='';
+  callAI(
+    `Give me a sharp 2-3 sentence briefing on the "${w.name}" situation. Status: ${w.update}. What's the most important thing to know or do right now?`,
+    [],
+    chunk=>{if(!full)out.textContent='';full+=chunk;out.textContent=full;},
+    null,
+    err=>{out.textContent='Could not load: '+err;}
+  );
+}
+
+function askAboutWatch(name){
+  const chatNav=document.querySelector('.ni[onclick*="chat"]');
+  showSec('chat',chatNav);
+  const inp=document.getElementById('chat-in');
+  inp.value='Give me a full briefing on: '+name;
+  sendChat();
 }
 
 // ===== DECISIONS =====
@@ -1468,10 +1560,10 @@ function layoutGraph(){
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
   });
   DOCS.forEach((d,i)=>{
-    const angle=(i/DOCS.length)*Math.PI*2+(rand()-.5)*.2;
-    const dist=360+(rand()-.5)*60;
-    const short=d.name.replace(/-/g,' ').slice(0,22);
-    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:5,vx:0,vy:0});
+    const angle=(i/DOCS.length)*Math.PI*2+(rand()-.5)*.15;
+    const dist=280+(rand()-.5)*40;
+    const short=d.name.replace(/-/g,' ').slice(0,18);
+    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
   });
 
   gEdges=[
@@ -1490,7 +1582,7 @@ function layoutGraph(){
 
 function runForceLayout(iters){
   if(!gNodes.length)return;
-  const k=Math.sqrt(800*600/Math.max(gNodes.length,1))*0.65;
+  const k=Math.sqrt(800*600/Math.max(gNodes.length,1))*0.42;
   for(let it=0;it<iters;it++){
     const cool=Math.max(0.05,1-it/iters);
     gNodes.forEach(n=>{n.vx=0;n.vy=0;});
@@ -1590,16 +1682,21 @@ function drawGraph(){
   gNodes.forEach(n=>{
     const isHov=n.id===hovId;
     const dimmed=hovId&&!isHov&&connSet&&!connSet.has(n.id);
-    gCtx.globalAlpha=dimmed?.15:1;
-    const col=n.type==='user'?'#14120B':n.type==='person'?'#C49A3C':n.type==='company'?'#C49A3C':'#9C9890';
+    gCtx.globalAlpha=dimmed?.12:1;
+    const col=n.type==='user'?'#14120B':n.type==='person'?'#4A7FD4':n.type==='company'?'#E05252':'#C49A3C';
     if(isHov){
-      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+6,0,Math.PI*2);
-      gCtx.strokeStyle='rgba(196,154,60,.55)';gCtx.lineWidth=2;gCtx.stroke();
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+7,0,Math.PI*2);
+      gCtx.strokeStyle=col+'88';gCtx.lineWidth=2.5;gCtx.stroke();
     }
     if(n.type==='document'){
-      const r=n.r+(isHov?2:0);
+      const r=n.r+(isHov?3:0);
       gCtx.fillStyle=col;
       gCtx.beginPath();gCtx.moveTo(n.x,n.y-r);gCtx.lineTo(n.x+r,n.y+r);gCtx.lineTo(n.x-r,n.y+r);gCtx.closePath();
+      gCtx.fill();
+    } else if(n.type==='company'){
+      const r=n.r+(isHov?3:0);
+      gCtx.fillStyle=col;gCtx.beginPath();
+      gCtx.roundRect?gCtx.roundRect(n.x-r,n.y-r,r*2,r*2,3):gCtx.rect(n.x-r,n.y-r,r*2,r*2);
       gCtx.fill();
     } else {
       gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+(isHov?3:0),0,Math.PI*2);
@@ -1610,14 +1707,23 @@ function drawGraph(){
       gCtx.font='bold 7px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='middle';
       gCtx.fillText('YOU',n.x,n.y);
     }
-    if((n.r>=9&&n.type!=='document')||isHov){
-      gCtx.globalAlpha=dimmed?.15:1;
-      gCtx.fillStyle=isHov?'#C49A3C':'rgba(20,18,11,.75)';
-      const fs=isHov?11:Math.min(n.r*.6,10);
+    // Labels: always show for contacts/companies, show for docs only when hovered
+    if(n.type!=='document'||isHov){
+      gCtx.globalAlpha=dimmed?.12:1;
+      gCtx.fillStyle=isHov?col:'rgba(20,18,11,.72)';
+      const fs=isHov?11:Math.min(Math.max(n.r*.65,8),11);
       gCtx.font=`${isHov?600:400} ${fs}px DM Sans,sans-serif`;
       gCtx.textAlign='center';gCtx.textBaseline='top';
-      const lbl=n.label.split(' ')[0];
-      gCtx.fillText(lbl,n.x,n.y+n.r+(isHov?5:3));
+      const lbl=n.type==='user'?'':(n.label.split(' ')[0].slice(0,14));
+      if(lbl)gCtx.fillText(lbl,n.x,n.y+n.r+(isHov?5:3));
+    }
+    // Tiny label for docs so they're visible
+    if(n.type==='document'&&!isHov&&!dimmed){
+      gCtx.globalAlpha=.45;
+      gCtx.fillStyle='rgba(20,18,11,.6)';
+      gCtx.font='7px DM Sans,sans-serif';gCtx.textAlign='center';gCtx.textBaseline='top';
+      gCtx.fillText(n.label.slice(0,12),n.x,n.y+n.r+2);
+      gCtx.globalAlpha=1;
     }
     gCtx.globalAlpha=1;
   });
