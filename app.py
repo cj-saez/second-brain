@@ -76,6 +76,11 @@ When drafting emails or communications, make them sharp and context-specific. Wh
 def index():
     return send_from_directory('.', 'second-brain.html')
 
+@app.route('/health')
+def health():
+    key = os.environ.get('ANTHROPIC_API_KEY', '')
+    return jsonify({'key_present': bool(key), 'key_length': len(key), 'key_prefix': key[:6] if key else ''})
+
 
 @app.route('/ask', methods=['POST'])
 def ask():
