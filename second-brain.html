@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Second Brain</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F1EA;--surface:#FEFCF8;--surface-2:#EDE9DF;
+  --ink:#14120B;--ink-2:#5C5850;--ink-3:#9C9890;--border:#DDD9D0;
+  --sidebar:#14120B;--sidebar-t:#F5F1EA;--sidebar-m:#6C6860;
+  --accent:#C49A3C;--accent-d:rgba(196,154,60,0.12);--gold-glow:rgba(196,154,60,0.08);
+  --green:#22C55E;--amber:#F59E0B;--red:#EF4444;
+  --r:12px;--rs:8px;--tr:.22s cubic-bezier(.4,0,.2,1);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.screen{display:none;position:fixed;inset:0;z-index:10}
+.screen.active{display:flex}
+
+/* LOGIN */
+#login-screen{background:var(--bg);align-items:center;justify-content:center;flex-direction:column;animation:fadeUp .6s ease both}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% -10%,rgba(196,154,60,0.08) 0%,transparent 70%);pointer-events:none}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:52px;position:relative}
+.login-logo-text{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;letter-spacing:-.02em;color:var(--ink)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px;width:100%;max-width:400px;box-shadow:0 8px 60px rgba(0,0,0,.07);position:relative}
+.login-h{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.2}
+.login-sub{font-size:13px;color:var(--ink-3);margin-bottom:34px}
+.fl{display:block;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);outline:none;transition:border-color var(--tr),box-shadow var(--tr);margin-bottom:20px}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-d)}
+.login-btn{width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:.01em;transition:all var(--tr);margin-top:4px}
+.login-btn:hover{background:#2d2920;transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.login-btn:active{transform:none}
+.login-err{color:var(--red);font-size:13px;margin-top:12px;display:none;text-align:center;animation:fadeIn .3s ease}
+
+/* ONBOARDING */
+#onboarding-screen{background:var(--bg);align-items:center;justify-content:flex-start;flex-direction:column;overflow-y:auto;padding:20px 0}
+.ob-bg{position:absolute;inset:0;background:radial-gradient(ellipse 50% 40% at 50% 0%,rgba(196,154,60,0.07) 0%,transparent 70%);pointer-events:none}
+.ob-wrap{width:100%;max-width:540px;padding:40px 24px;position:relative}
+.ob-step{display:none;animation:fadeUp .4s ease both}
+.ob-step.active{display:block}
+.ob-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+.ob-h{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:600;line-height:1.1;color:var(--ink);margin-bottom:10px}
+.ob-sub{font-size:15px;color:var(--ink-2);margin-bottom:36px;line-height:1.65}
+.ob-name{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;font-style:italic;color:var(--ink);background:transparent;border:none;border-bottom:2px solid var(--border);width:100%;padding:8px 0;outline:none;margin-bottom:44px;transition:border-color var(--tr)}
+.ob-name:focus{border-color:var(--accent)}
+.ob-name::placeholder{color:var(--ink-3)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:44px}
+.chip{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:40px;padding:10px 18px;font-size:13px;color:var(--ink-2);cursor:pointer;transition:all var(--tr);user-select:none}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.chip.sel{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.uc-opts{display:flex;flex-direction:column;gap:12px;margin-bottom:44px}
+.uc-opt{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;cursor:pointer;transition:all var(--tr)}
+.uc-opt:hover{border-color:var(--accent)}
+.uc-opt.sel{border-color:var(--accent);background:var(--gold-glow)}
+.uc-t{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.uc-s{font-size:13px;color:var(--ink-3)}
+.ob-btn{background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);padding:14px 32px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all var(--tr)}
+.ob-btn:hover{background:#2d2920;transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.dots{display:flex;gap:8px;margin-bottom:52px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all var(--tr)}
+.dot.active{background:var(--accent);width:28px;border-radius:4px}
+
+/* APP */
+#app-screen{background:var(--bg);flex-direction:row;overflow:hidden}
+.sidebar{width:64px;background:var(--sidebar);height:100%;display:flex;flex-direction:column;padding:0 0 24px;overflow:hidden;transition:width .32s cubic-bezier(.4,0,.2,1);flex-shrink:0;z-index:20;position:relative}
+.sidebar:hover{width:256px;box-shadow:4px 0 40px rgba(0,0,0,.22)}
+.sb-logo{display:flex;align-items:center;gap:12px;padding:28px 0 36px 21px;white-space:nowrap;flex-shrink:0}
+.sb-logo-text{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--sidebar-t);letter-spacing:-.01em;opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-logo-text{opacity:1;transition:opacity .2s .15s}
+.sb-nav{flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden}
+.ni{display:flex;align-items:center;gap:12px;padding:11px 0 11px 14px;border-radius:var(--rs);cursor:pointer;transition:background var(--tr);position:relative;white-space:nowrap}
+.ni:hover{background:rgba(255,255,255,.07)}
+.ni.active{background:rgba(255,255,255,.11)}
+.ni-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--sidebar-m);transition:color var(--tr)}
+.ni.active .ni-icon{color:var(--accent)}
+.ni-t{font-size:13px;font-weight:500;color:rgba(245,241,234,.5);line-height:1;margin-bottom:2px;opacity:0;transition:opacity .12s}
+.ni.active .ni-t{color:var(--sidebar-t)}
+.sidebar:hover .ni-t{opacity:1;transition:opacity .2s .12s}
+.ni-s{font-size:11px;color:var(--sidebar-m);opacity:0;transition:opacity .12s}
+.sidebar:hover .ni-s{opacity:1;transition:opacity .2s .12s}
+.ni-badge{width:7px;height:7px;border-radius:50%;background:var(--accent);position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none}
+.ni-badge.show{display:block;animation:badge-ping 1.6s ease-in-out infinite}
+.sb-div{height:1px;background:rgba(255,255,255,.06);margin:12px 8px;flex-shrink:0}
+.sb-bot{padding:0 8px;display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.sb-bi{display:flex;align-items:center;gap:12px;padding:10px 0 10px 14px;border-radius:var(--rs);cursor:pointer;transition:background var(--tr);font-size:12px;color:var(--sidebar-m);white-space:nowrap}
+.sb-bi:hover{background:rgba(255,255,255,.07);color:var(--sidebar-t)}
+.sb-bi svg{flex-shrink:0}
+.sb-bi-lbl{opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-bi-lbl{opacity:1;transition:opacity .2s .12s}
+.content{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.section{display:none;flex:1;overflow:hidden;animation:fadeIn .28s ease both}
+.section.active{display:flex;flex-direction:column}
+
+/* CHIEF OF STAFF */
+.chief-inner{display:flex;flex:1;overflow:hidden}
+.brief-main{flex:1;overflow-y:auto;padding-bottom:60px}
+.brief-hdr{padding:44px 52px 0;flex-shrink:0}
+.brief-date{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.brief-title{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;line-height:1.05;color:var(--ink);margin-bottom:4px}
+.brief-title em{font-style:italic;color:var(--accent)}
+.brief-live{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:6px 14px;font-size:12px;color:var(--ink-2);margin-bottom:36px;margin-top:16px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.brief-body{padding:0 52px;max-width:680px}
+.bp{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;line-height:1.7;color:var(--ink);margin-bottom:28px;opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+.bp.rev{opacity:1;transform:none}
+.bdiv{height:1px;background:var(--border);margin:32px 0;opacity:0;transition:opacity .5s ease}
+.bdiv.rev{opacity:1}
+.bst{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:20px;opacity:0;transition:opacity .5s ease}
+.bst.rev{opacity:1}
+.bcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+.bcards.rev{opacity:1;transform:none}
+.bcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all var(--tr)}
+.bcard:hover{box-shadow:0 6px 28px rgba(0,0,0,.08);transform:translateY(-2px);border-color:var(--accent)}
+.bc-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.bc-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.35}
+.bc-body{font-size:12px;color:var(--ink-2);line-height:1.55}
+
+/* PRIORITY STACK */
+.pstack{width:272px;min-width:272px;border-left:1px solid var(--border);overflow-y:auto;padding:36px 22px}
+.ps-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.ps-title{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.ps-live{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2.4s infinite}
+.ps-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all var(--tr);position:relative;overflow:hidden}
+.ps-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+.ps-item.hi::before{background:var(--red)}
+.ps-item.md::before{background:var(--accent)}
+.ps-item.lo::before{background:var(--green)}
+.ps-item:hover{border-color:var(--accent);box-shadow:0 3px 16px rgba(0,0,0,.06);transform:translateX(2px)}
+.ps-rank{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--border);position:absolute;top:10px;right:12px;line-height:1}
+.ps-urg{font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.ps-urg.hi{color:var(--red)}.ps-urg.md{color:var(--accent)}.ps-urg.lo{color:var(--green)}
+.ps-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;padding-right:22px;line-height:1.3}
+.ps-when{font-size:11px;color:var(--ink-3)}
+
+/* SIGNAL FEED */
+.feed-wrap{flex:1;overflow-y:auto;padding:36px 48px}
+.feed-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.feed-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--ink)}
+.feed-filters{display:flex;gap:8px;flex-wrap:wrap}
+.ff{background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:7px 16px;font-size:12px;color:var(--ink-2);cursor:pointer;transition:all var(--tr)}
+.ff:hover{border-color:var(--accent);color:var(--ink)}
+.ff.sel{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.signal-list{display:flex;flex-direction:column;gap:12px}
+.sig{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;cursor:pointer;transition:all var(--tr);animation:fadeUp .35s ease both;position:relative}
+.sig:hover{border-color:var(--accent);box-shadow:0 4px 24px rgba(0,0,0,.08);transform:translateY(-1px)}
+.sig-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sig-type{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-weight:600}
+.st-email{background:var(--accent-d);color:var(--accent)}
+.st-intel{background:rgba(34,197,94,.1);color:var(--green)}
+.st-deal{background:rgba(239,68,68,.1);color:var(--red)}
+.st-calendar{background:rgba(148,130,200,.1);color:#8B74BD}
+.sig-pri{margin-left:auto;font-size:11px;font-weight:600}
+.sig-pri.high{color:var(--red)}.sig-pri.medium{color:var(--amber)}.sig-pri.low{color:var(--ink-3)}
+.sig-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.35}
+.sig-body{font-size:13px;color:var(--ink-2);line-height:1.55;margin-bottom:12px}
+.sig-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sig-time{font-size:11px;color:var(--ink-3)}
+.sig-tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface-2);color:var(--ink-3);padding:3px 10px;border-radius:20px}
+.sig-act{font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;padding:4px 10px;border-radius:6px;transition:background var(--tr);border:none;background:transparent;font-family:'DM Sans',sans-serif}
+.sig-act:hover{background:var(--accent-d)}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%}
+.chat-hdr{padding:36px 44px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-hdr-t{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--ink);margin-bottom:4px}
+.chat-hdr-s{font-size:13px;color:var(--ink-3)}
+.chat-msgs{flex:1;overflow-y:auto;padding:32px 44px;display:flex;flex-direction:column;gap:16px}
+.chat-prompts-h{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--ink);margin-bottom:18px}
+.chat-prompts-list{display:flex;flex-direction:column;gap:10px}
+.cpbtn{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);text-align:left;transition:all var(--tr);width:100%}
+.cpbtn:hover{border-color:var(--accent);box-shadow:0 3px 16px rgba(0,0,0,.06)}
+.cbubble{max-width:76%;padding:14px 18px;border-radius:16px;font-size:14px;line-height:1.65;white-space:pre-line}
+.cbubble.user{background:var(--ink);color:var(--bg);align-self:flex-end;border-bottom-right-radius:4px}
+.cbubble.ai{background:var(--surface);color:var(--ink);align-self:flex-start;border:1px solid var(--border);border-bottom-left-radius:4px}
+.chat-input-area{padding:20px 44px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:flex-end;flex-shrink:0}
+.chat-in{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);resize:none;outline:none;min-height:44px;max-height:120px;transition:border-color var(--tr),box-shadow var(--tr)}
+.chat-in:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-d)}
+.chat-send{background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);flex-shrink:0}
+.chat-send:hover{background:var(--accent)}
+
+/* CONTACTS */
+.contacts-wrap{display:flex;height:100%}
+.clist{width:320px;min-width:320px;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.clist-hdr{padding:28px 22px 16px;flex-shrink:0;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1}
+.clist-t{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--ink);margin-bottom:12px}
+.csearch{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color var(--tr)}
+.csearch:focus{border-color:var(--accent)}
+.citem{display:flex;align-items:center;gap:12px;padding:14px 22px;cursor:pointer;transition:background var(--tr);border-bottom:1px solid var(--border)}
+.citem:hover{background:var(--surface-2)}
+.citem.active{background:var(--surface)}
+.cav{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;position:relative}
+.cav.co{background:var(--surface-2);color:var(--ink);border:1px solid var(--border);font-size:11px;border-radius:10px}
+.health-dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--bg);position:absolute;bottom:-1px;right:-1px}
+.hd-g{background:var(--green)}.hd-a{background:var(--amber)}.hd-r{background:var(--red)}
+.ci-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.ci-meta{display:flex;align-items:center;gap:6px}
+.ctag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.03em}
+.tp{background:var(--accent-d);color:var(--accent)}
+.tc{background:rgba(245,158,11,.12);color:var(--amber)}
+.ci-date{font-size:11px;color:var(--ink-3)}
+.cdetail{flex:1;overflow-y:auto;padding:40px}
+.cdetail-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-3);font-size:16px;font-family:'Cormorant Garamond',serif;font-style:italic}
+.cda{width:60px;height:60px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;margin-bottom:18px}
+.cda.co{border-radius:14px;background:var(--surface);color:var(--ink);border:1px solid var(--border);font-size:16px}
+.cdn{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.cdr{font-size:14px;color:var(--ink-2);margin-bottom:8px}
+.cdemail{font-size:12px;color:var(--ink-3);margin-bottom:20px}
+.chealth-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;margin-bottom:24px}
+.chb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.chb-label{font-size:12px;color:var(--ink-2)}
+.chb-val{margin-left:auto;font-size:12px;font-weight:600;color:var(--ink)}
+.cstats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.cstat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.csv{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--ink)}
+.csl{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.ctimeline{border-top:1px solid var(--border);padding-top:24px}
+.tl-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
+.tl-item{display:flex;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.tl-date{font-size:11px;color:var(--ink-3);margin-bottom:4px}
+.tl-text{font-size:13px;color:var(--ink);line-height:1.55}
+
+/* CALENDAR */
+.cal-outer{display:flex;flex:1;overflow:hidden}
+.cal-wrap{padding:36px 48px;overflow-y:auto;flex:1}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.cal-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--ink)}
+.cal-range{font-size:13px;color:var(--ink-2);margin-top:2px}
+.cal-nav{display:flex;gap:8px}
+.cnbtn{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--ink-2);transition:all var(--tr)}
+.cnbtn:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cal-cols{display:grid;grid-template-columns:60px repeat(7,1fr);border-bottom:1px solid var(--border);padding-bottom:12px}
+.col-day{text-align:center}
+.col-lbl{font-size:11px;font-weight:500;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.col-num{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--ink);line-height:1}
+.col-num.today-n{background:var(--ink);color:var(--bg);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:19px;margin:0 auto}
+.cal-grid{display:flex;flex-direction:column}
+.cal-row{display:grid;grid-template-columns:60px repeat(7,1fr);min-height:60px;border-bottom:1px solid var(--border)}
+.cal-tlbl{font-size:11px;color:var(--ink-3);padding:8px 0;text-align:right;padding-right:14px;line-height:1}
+.cal-cell{border-left:1px solid var(--border);padding:4px;position:relative;min-height:60px}
+.calevent{background:var(--ink);color:var(--bg);border-radius:6px;padding:6px 8px;font-size:11px;cursor:pointer;transition:all var(--tr);line-height:1.35;margin-bottom:3px}
+.calevent:hover{background:var(--accent)}
+.calevent.alt{background:var(--accent);color:#fff}
+.calevent.muted{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border)}
+.calevent.muted:hover{background:var(--surface);border-color:var(--accent)}
+.calevent-time{font-size:10px;opacity:.7;margin-bottom:2px}
+.calevent-title{font-weight:500}
+.today-col{background:rgba(196,154,60,.025)}
+
+/* MEETING PREP PANEL */
+.prep-panel{width:0;overflow:hidden;transition:width .32s cubic-bezier(.4,0,.2,1);border-left:0px solid var(--border);flex-shrink:0}
+.prep-panel.open{width:320px;border-left-width:1px}
+.prep-inner{width:320px;padding:32px 24px;overflow-y:auto;height:100%}
+.prep-close{font-size:11px;color:var(--ink-3);cursor:pointer;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px;transition:color var(--tr)}
+.prep-close:hover{color:var(--ink)}
+.prep-meet-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:4px;line-height:1.25}
+.prep-meet-meta{font-size:12px;color:var(--accent);margin-bottom:6px;font-weight:600}
+.prep-meet-with{font-size:12px;color:var(--ink-3);margin-bottom:24px}
+.prep-section{margin-bottom:22px}
+.prep-sh{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.prep-ctx{font-size:13px;color:var(--ink-2);line-height:1.6;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px}
+.prep-bullet{font-size:13px;color:var(--ink);line-height:1.6;padding-left:16px;position:relative;margin-bottom:5px}
+.prep-bullet::before{content:'·';position:absolute;left:0;color:var(--accent);font-weight:bold;font-size:16px;line-height:1.3}
+
+/* VAULT */
+.vault-wrap{padding:36px 48px;overflow-y:auto;flex:1}
+.vault-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.vault-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--ink)}
+.vsearch{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;width:240px;transition:all var(--tr)}
+.vsearch:focus{border-color:var(--accent);width:300px;box-shadow:0 0 0 3px var(--accent-d)}
+.vault-docs{display:flex;flex-direction:column;gap:2px}
+.vdoc{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all var(--tr);animation:fadeUp .3s ease both}
+.vdoc:hover{border-color:var(--accent);box-shadow:0 3px 16px rgba(0,0,0,.06);transform:translateX(3px)}
+.vdoc-icon{width:36px;height:36px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.vdoc-info{flex:1}
+.vdoc-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.vdoc-meta{font-size:12px;color:var(--ink-3)}
+.vdoc-check{color:var(--accent);font-size:15px;font-weight:bold}
+
+/* WATCHLIST */
+.watch-wrap{padding:36px 48px;overflow-y:auto;flex:1}
+.watch-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.watch-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--ink)}
+.watch-sub{font-size:13px;color:var(--ink-3);margin-top:3px}
+.watch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.wcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;cursor:pointer;transition:all var(--tr);animation:fadeUp .35s ease both;position:relative;overflow:hidden}
+.wcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.wcard.risk-high::after{background:var(--red)}
+.wcard.risk-med::after{background:var(--amber)}
+.wcard.risk-low::after{background:var(--green)}
+.wcard:hover{border-color:var(--accent);box-shadow:0 6px 28px rgba(0,0,0,.09);transform:translateY(-2px)}
+.wcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.wcard-icon{font-size:22px}
+.wcard-stage{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--surface-2);color:var(--ink-3)}
+.wcard-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.3}
+.wcard-update{font-size:13px;color:var(--ink-2);line-height:1.5;margin-bottom:16px}
+.wcard-risk{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600}
+.wr-dot{width:7px;height:7px;border-radius:50%}
+.wr-h{color:var(--red)}.wr-h .wr-dot{background:var(--red)}
+.wr-m{color:var(--amber)}.wr-m .wr-dot{background:var(--amber)}
+.wr-l{color:var(--green)}.wr-l .wr-dot{background:var(--green)}
+
+/* DECISION LOG */
+.dec-wrap{padding:36px 48px;overflow-y:auto;flex:1}
+.dec-hdr{margin-bottom:32px}
+.dec-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--ink);margin-bottom:6px}
+.dec-sub{font-size:13px;color:var(--ink-3)}
+.dec-list{display:flex;flex-direction:column;position:relative;padding-left:28px}
+.dec-list::before{content:'';position:absolute;left:7px;top:8px;bottom:20px;width:1px;background:var(--border)}
+.dec-item{margin-bottom:28px;animation:fadeUp .4s ease both;position:relative}
+.dec-dot{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);position:absolute;left:-28px;top:6px;z-index:1}
+.dec-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:all var(--tr);cursor:pointer}
+.dec-body:hover{border-color:var(--accent);box-shadow:0 3px 16px rgba(0,0,0,.06)}
+.dec-date{font-size:11px;color:var(--ink-3);margin-bottom:8px}
+.dec-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:12px;line-height:1.35}
+.dec-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.dec-val{font-size:13px;color:var(--ink-2);line-height:1.55;margin-bottom:12px}
+.dec-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.dec-tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface-2);color:var(--ink-3);padding:3px 10px;border-radius:20px}
+.dec-out{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px}
+.do-pending{background:var(--accent-d);color:var(--accent)}
+.do-open{background:rgba(245,158,11,.12);color:var(--amber)}
+.do-progress{background:rgba(148,130,200,.12);color:#8B74BD}
+.do-resolved{background:rgba(34,197,94,.1);color:var(--green)}
+
+/* GRAPH */
+.graph-wrap{flex:1;position:relative;overflow:hidden}
+#graph-canvas{width:100%;height:100%;cursor:grab;display:block}
+#graph-canvas:active{cursor:grabbing}
+.graph-legend{position:absolute;bottom:24px;left:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 32px rgba(0,0,0,.09)}
+.g-legend-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.gli{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2)}
+.gld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.graph-tip{position:absolute;background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:12px;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.2);z-index:10}
+.graph-info{position:absolute;top:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:240px;display:none;box-shadow:0 6px 32px rgba(0,0,0,.09)}
+.gi-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.gi-type{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+.gi-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--border)}
+.gi-stat:last-child{border-bottom:none}
+
+/* BRIEF CHAT */
+.brief-chat-wrap{border-top:1px solid var(--border);margin:32px 52px 0;padding:24px 0 40px}
+.bch-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.bch-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.4s infinite}
+.bch-lbl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.bch-msgs{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;max-height:260px;overflow-y:auto}
+.bch-bubble{padding:11px 15px;border-radius:12px;font-size:13px;line-height:1.65;white-space:pre-line;animation:fadeUp .3s ease}
+.bch-bubble.user{background:var(--ink);color:var(--bg);align-self:flex-end;max-width:82%;border-bottom-right-radius:3px}
+.bch-bubble.ai{background:var(--surface);color:var(--ink);border:1px solid var(--border);align-self:flex-start;max-width:92%;border-bottom-left-radius:3px}
+.bch-thinking{display:flex;gap:5px;padding:11px 15px;background:var(--surface);border:1px solid var(--border);border-radius:12px;border-bottom-left-radius:3px;align-self:flex-start}
+.bch-thinking span{width:5px;height:5px;border-radius:50%;background:var(--ink-3);animation:blink 1.2s infinite}
+.bch-thinking span:nth-child(2){animation-delay:.2s}
+.bch-thinking span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.bch-input-row{display:flex;gap:10px;align-items:center}
+.bch-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color var(--tr)}
+.bch-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-d)}
+.bch-send{background:var(--ink);color:var(--bg);border:none;border-radius:var(--rs);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);flex-shrink:0}
+.bch-send:hover{background:var(--accent)}
+.bch-powered{font-size:10px;color:var(--ink-3);text-align:right;margin-top:8px;letter-spacing:.03em}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes badge-ping{0%,100%{opacity:1;transform:translateY(-50%) scale(1)}50%{opacity:.4;transform:translateY(-50%) scale(1.5)}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+  <div class="login-bg"></div>
+  <div class="login-logo">
+    <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+      <ellipse cx="14" cy="24" rx="11" ry="11" fill="#C49A3C" opacity=".15"/>
+      <path d="M14 2C10.5 8 5 15 5 22C5 28.627 9.03 34 14 34C18.97 34 23 28.627 23 22C23 15 17.5 8 14 2Z" fill="#C49A3C"/>
+    </svg>
+    <span class="login-logo-text">Second Brain</span>
+  </div>
+  <div class="login-card">
+    <h1 class="login-h">Welcome back.</h1>
+    <p class="login-sub">Sign in to continue to your intelligence layer.</p>
+    <label class="fl" for="em">Email</label>
+    <input id="em" class="fi" type="email" value="operand@acquaint.com">
+    <label class="fl" for="pw">Password</label>
+    <input id="pw" class="fi" type="password" placeholder="••••••••••">
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <div class="login-err" id="login-err">Incorrect credentials. Try again.</div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding-screen" class="screen">
+  <div class="ob-bg"></div>
+  <div class="ob-wrap">
+    <div class="dots">
+      <div class="dot active" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+    </div>
+    <div class="ob-step active" id="s0">
+      <div class="ob-label">Step 1 of 3</div>
+      <h2 class="ob-h">What's your name?</h2>
+      <p class="ob-sub">Second Brain will personalize your daily brief and intelligence layer around you.</p>
+      <input class="ob-name" id="ob-name" type="text" placeholder="Your first name…" autocomplete="off">
+      <div><button class="ob-btn" onclick="goStep(1)">Continue →</button></div>
+    </div>
+    <div class="ob-step" id="s1">
+      <div class="ob-label">Step 2 of 3</div>
+      <h2 class="ob-h">What should Second Brain track?</h2>
+      <p class="ob-sub">Select everything relevant. Second Brain will learn what to surface from your emails, calendar, and meetings.</p>
+      <div class="chips">
+        <div class="chip" onclick="this.classList.toggle('sel')">Deal flow &amp; investments</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">Portfolio company ops</div>
+        <div class="chip sel" onclick="this.classList.toggle('sel')">Team &amp; hiring</div>
+        <div class="chip sel" onclick="this.classList.toggle('sel')">Board &amp; investor relations</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">Strategic planning</div>
+        <div class="chip sel" onclick="this.classList.toggle('sel')">Customer relationships</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">Market intelligence</div>
+        <div class="chip sel" onclick="this.classList.toggle('sel')">Financial performance</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">Legal &amp; compliance</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">Vendor &amp; supplier mgmt</div>
+      </div>
+      <div><button class="ob-btn" onclick="goStep(2)">Continue →</button></div>
+    </div>
+    <div class="ob-step" id="s2">
+      <div class="ob-label">Step 3 of 3</div>
+      <h2 class="ob-h">What are you using Second Brain for?</h2>
+      <p class="ob-sub">This calibrates what your daily brief prioritizes and how your intelligence layer compounds over time.</p>
+      <div class="uc-opts">
+        <div class="uc-opt" onclick="selUC(this)"><div class="uc-t">Running a fund or investing</div><div class="uc-s">Deal sourcing, LP relations, portfolio monitoring</div></div>
+        <div class="uc-opt sel" onclick="selUC(this)"><div class="uc-t">Operating a portfolio company</div><div class="uc-s">CEO of a PE-backed or ETA-acquired business</div></div>
+        <div class="uc-opt" onclick="selUC(this)"><div class="uc-t">Conducting an active search</div><div class="uc-s">ETA / search fund, sourcing and diligence</div></div>
+        <div class="uc-opt" onclick="selUC(this)"><div class="uc-t">Leading a growing business</div><div class="uc-s">Founder or CEO of an independent company</div></div>
+        <div class="uc-opt" onclick="selUC(this)"><div class="uc-t">Executive consulting or advising</div><div class="uc-s">Working across multiple clients and engagements</div></div>
+      </div>
+      <div><button class="ob-btn" onclick="enterApp()">Enter Second Brain →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="screen">
+  <div class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <svg width="20" height="26" viewBox="0 0 20 26" fill="none">
+        <path d="M10 1C7 6 2 12 2 18C2 22.42 5.58 25 10 25C14.42 25 18 22.42 18 18C18 12 13 6 10 1Z" fill="#C49A3C"/>
+      </svg>
+      <span class="sb-logo-text">Second Brain</span>
+    </div>
+    <div class="sb-nav">
+      <div class="ni active" onclick="showSec('chief',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+        <div><div class="ni-t">Chief of Staff</div><div class="ni-s">Daily Brief</div></div>
+        <div class="ni-badge"></div>
+      </div>
+      <div class="ni" onclick="showSec('signals',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div><div class="ni-t">Signals</div><div class="ni-s">Intelligence Feed</div></div>
+      </div>
+      <div class="ni" onclick="showSec('chat',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <div><div class="ni-t">Chat</div><div class="ni-s">Intelligence &amp; Memory</div></div>
+      </div>
+      <div class="ni" onclick="showSec('contacts',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div><div class="ni-t">Contacts</div><div class="ni-s">People &amp; Companies</div></div>
+      </div>
+      <div class="ni" onclick="showSec('calendar',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div><div class="ni-t">Calendar</div><div class="ni-s">Schedule &amp; Context</div></div>
+      </div>
+      <div class="ni" onclick="showSec('vault',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+        <div><div class="ni-t">Vault</div><div class="ni-s">Documents</div></div>
+      </div>
+      <div class="ni" onclick="showSec('graph',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+        <div><div class="ni-t">Graph</div><div class="ni-s">Connections</div></div>
+      </div>
+      <div class="ni" onclick="showSec('watchlist',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div><div class="ni-t">Watchlist</div><div class="ni-s">Track &amp; Monitor</div></div>
+      </div>
+      <div class="ni" onclick="showSec('decisions',this)">
+        <div class="ni-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+        <div><div class="ni-t">Decisions</div><div class="ni-s">Decision Log</div></div>
+      </div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-bot">
+      <div class="sb-bi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span class="sb-bi-lbl">Integrations</span></div>
+      <div class="sb-bi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M21 12h-2M5 12H3M12 3V1M12 23v-2"/></svg><span class="sb-bi-lbl">Settings</span></div>
+      <div class="sb-bi" onclick="document.getElementById('app-screen').classList.remove('active');document.getElementById('login-screen').classList.add('active')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="sb-bi-lbl">Log out</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- CHIEF OF STAFF -->
+    <div class="section active" id="section-chief">
+      <div class="chief-inner">
+        <div class="brief-main">
+          <div class="brief-hdr">
+            <div class="brief-date" id="brief-date">Tuesday, April 29 · 2026</div>
+            <h1 class="brief-title">Good morning, <em>John.</em></h1>
+            <div class="brief-live"><div class="live-dot"></div>Updated 5:47 AM · Watching 4 open threads</div>
+          </div>
+          <div class="brief-body" id="brief-body"></div>
+          <div class="brief-chat-wrap">
+            <div class="bch-header"><div class="bch-dot"></div><div class="bch-lbl">Ask Second Brain</div></div>
+            <div class="bch-msgs" id="bch-msgs"></div>
+            <div class="bch-input-row">
+              <input class="bch-input" id="bch-input" type="text" placeholder="Ask about your brief, documents, schedule…" onkeydown="if(event.key==='Enter')sendBriefChat()">
+              <button class="bch-send" onclick="sendBriefChat()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+            </div>
+            <div class="bch-powered">Powered by Claude · connect API key for live responses</div>
+          </div>
+        </div>
+        <div class="pstack">
+          <div class="ps-hdr"><div class="ps-title">Priority Stack</div><div class="ps-live"></div></div>
+          <div id="pstack-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNALS -->
+    <div class="section" id="section-signals">
+      <div class="feed-wrap">
+        <div class="feed-hdr">
+          <div>
+            <div class="feed-title">Intelligence Feed</div>
+          </div>
+          <div class="feed-filters">
+            <div class="ff sel" onclick="filterSignals('all',this)">All</div>
+            <div class="ff" onclick="filterSignals('email',this)">Email</div>
+            <div class="ff" onclick="filterSignals('deal',this)">Deal</div>
+            <div class="ff" onclick="filterSignals('intel',this)">Intel</div>
+            <div class="ff" onclick="filterSignals('calendar',this)">Calendar</div>
+          </div>
+        </div>
+        <div class="signal-list" id="signal-list"></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="section" id="section-chat">
+      <div class="chat-wrap">
+        <div class="chat-hdr">
+          <div class="chat-hdr-t">Intelligence &amp; Memory</div>
+          <div class="chat-hdr-s">Ask anything. Second Brain knows your full context — emails, meetings, contacts, documents.</div>
+        </div>
+        <div class="chat-msgs" id="chat-msgs">
+          <div id="chat-prompts">
+            <div class="chat-prompts-h">What are you working through today?</div>
+            <div class="chat-prompts-list">
+              <button class="cpbtn" onclick="sendPrompt('Help me think through a decision I\'m stuck on')">Help me think through a decision I'm stuck on <span>›</span></button>
+              <button class="cpbtn" onclick="sendPrompt('Draft a follow-up for a client who\'s gone quiet')">Draft a follow-up for a client who's gone quiet <span>›</span></button>
+              <button class="cpbtn" onclick="sendPrompt('What should I focus on this week?')">What should I focus on this week? <span>›</span></button>
+              <button class="cpbtn" onclick="sendPrompt('Prep me for a meeting')">Prep me for a meeting <span>›</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-in" id="chat-in" placeholder="Ask anything…" rows="1" onkeydown="handleChatKey(event)"></textarea>
+          <button class="chat-send" onclick="sendChat()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="section" id="section-contacts">
+      <div class="contacts-wrap">
+        <div class="clist">
+          <div class="clist-hdr">
+            <div class="clist-t">Contacts</div>
+            <input class="csearch" type="text" placeholder="Search people &amp; companies…" oninput="filterContacts(this.value)">
+          </div>
+          <div id="clist-items"></div>
+        </div>
+        <div class="cdetail" id="cdetail"><div class="cdetail-empty">Select a contact to view context</div></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="section" id="section-calendar">
+      <div class="cal-outer">
+        <div class="cal-wrap">
+          <div class="cal-hdr">
+            <div>
+              <div class="cal-title">Schedule &amp; Context</div>
+              <div class="cal-range">Apr 27 – May 3, 2026 · This week</div>
+            </div>
+            <div class="cal-nav"><div class="cnbtn">‹</div><div class="cnbtn">›</div></div>
+          </div>
+          <div class="cal-cols">
+            <div></div>
+            <div class="col-day"><div class="col-lbl">Sun</div><div class="col-num">27</div></div>
+            <div class="col-day"><div class="col-lbl">Mon</div><div class="col-num">28</div></div>
+            <div class="col-day"><div class="col-lbl">Tue</div><div class="col-num today-n">29</div></div>
+            <div class="col-day"><div class="col-lbl">Wed</div><div class="col-num">30</div></div>
+            <div class="col-day"><div class="col-lbl">Thu</div><div class="col-num">1</div></div>
+            <div class="col-day"><div class="col-lbl">Fri</div><div class="col-num">2</div></div>
+            <div class="col-day"><div class="col-lbl">Sat</div><div class="col-num">3</div></div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-row">
+              <div class="cal-tlbl">9 AM</div>
+              <div class="cal-cell"></div>
+              <div class="cal-cell"><div class="calevent" onclick="openPrep('leadership')"><div class="calevent-time">9:00 AM</div><div class="calevent-title">Leadership sync</div></div></div>
+              <div class="cal-cell today-col"><div class="calevent alt" onclick="openPrep('marietta-qbr')"><div class="calevent-time">9:30 AM</div><div class="calevent-title">Marietta QBR — Janet Brusser</div></div></div>
+              <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            </div>
+            <div class="cal-row">
+              <div class="cal-tlbl">10 AM</div>
+              <div class="cal-cell"></div>
+              <div class="cal-cell"><div class="calevent muted" onclick="openPrep('sarah-1-1')"><div class="calevent-time">10:30 AM</div><div class="calevent-title">1:1 Sarah Chen</div></div></div>
+              <div class="cal-cell today-col"></div>
+              <div class="cal-cell"><div class="calevent" onclick="openPrep('cascade-review')"><div class="calevent-time">10:00 AM</div><div class="calevent-title">Cascade Industries review</div></div></div>
+              <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            </div>
+            <div class="cal-row">
+              <div class="cal-tlbl">11 AM</div>
+              <div class="cal-cell"></div><div class="cal-cell"></div>
+              <div class="cal-cell today-col"><div class="calevent muted" onclick="openPrep('dan-debrief')"><div class="calevent-time">11:00 AM</div><div class="calevent-title">Dan Kowalski — ops debrief</div></div></div>
+              <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            </div>
+            <div class="cal-row">
+              <div class="cal-tlbl">1 PM</div>
+              <div class="cal-cell"></div><div class="cal-cell"></div>
+              <div class="cal-cell today-col"></div>
+              <div class="cal-cell"><div class="calevent" onclick="openPrep('mike-comp')"><div class="calevent-time">1:00 PM</div><div class="calevent-title">Mike Devereux — comp discussion</div></div></div>
+              <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            </div>
+            <div class="cal-row">
+              <div class="cal-tlbl">2 PM</div>
+              <div class="cal-cell"></div><div class="cal-cell"></div>
+              <div class="cal-cell today-col"></div><div class="cal-cell"></div>
+              <div class="cal-cell"><div class="calevent alt" onclick="openPrep('board-dryrun')"><div class="calevent-time">2:00 PM</div><div class="calevent-title">Q2 board deck dry-run</div></div></div>
+              <div class="cal-cell"></div><div class="cal-cell"></div>
+            </div>
+            <div class="cal-row">
+              <div class="cal-tlbl">3 PM</div>
+              <div class="cal-cell"></div><div class="cal-cell"></div>
+              <div class="cal-cell today-col"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+              <div class="cal-cell"><div class="calevent" onclick="openPrep('jen-offer')"><div class="calevent-time">3:30 PM</div><div class="calevent-title">Jennifer Ruiz — offer review</div></div></div>
+              <div class="cal-cell"></div>
+            </div>
+          </div>
+        </div>
+        <div class="prep-panel" id="prep-panel">
+          <div class="prep-inner" id="prep-inner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VAULT -->
+    <div class="section" id="section-vault">
+      <div style="display:flex;flex:1;overflow:hidden">
+        <div class="vault-wrap" style="flex:1;overflow-y:auto">
+          <div class="vault-hdr">
+            <div class="vault-title">Vault</div>
+            <input class="vsearch" type="text" placeholder="Search documents…">
+          </div>
+          <div class="vault-docs" id="vault-docs"></div>
+        </div>
+        <div id="vault-panel" style="width:0;overflow:hidden;transition:width .32s cubic-bezier(.4,0,.2,1);border-left:0px solid var(--border);flex-shrink:0">
+          <div id="vault-panel-inner" style="width:360px;padding:32px 28px;overflow-y:auto;height:100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAPH -->
+    <div class="section" id="section-graph" style="padding:0;overflow:hidden">
+      <div class="graph-wrap" id="graph-wrap">
+        <canvas id="graph-canvas"></canvas>
+        <div class="graph-legend">
+          <div class="g-legend-title">Connection types</div>
+          <div class="gli"><div class="gld" style="background:#14120B"></div>You</div>
+          <div class="gli"><div class="gld" style="background:#C49A3C"></div>Person</div>
+          <div class="gli"><div class="gld" style="background:#F59E0B"></div>Company</div>
+          <div class="gli"><div class="gld" style="background:#9C9890"></div>Document</div>
+        </div>
+        <div class="graph-tip" id="graph-tip"></div>
+        <div class="graph-info" id="graph-info"></div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="section" id="section-watchlist">
+      <div class="watch-wrap">
+        <div class="watch-hdr">
+          <div>
+            <div class="watch-title">Watchlist</div>
+            <div class="watch-sub">Active situations being monitored by Second Brain</div>
+          </div>
+        </div>
+        <div class="watch-grid" id="watch-grid"></div>
+      </div>
+    </div>
+
+    <!-- DECISIONS -->
+    <div class="section" id="section-decisions">
+      <div class="dec-wrap">
+        <div class="dec-hdr">
+          <div class="dec-title">Decision Log</div>
+          <div class="dec-sub">A timestamped record of key decisions, context, and outcomes.</div>
+        </div>
+        <div class="dec-list" id="dec-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div onclick="closeModal()" style="position:absolute;inset:0;background:rgba(20,18,11,.45);backdrop-filter:blur(3px);animation:fadeIn .2s ease"></div>
+  <div id="dm-card" style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;z-index:1;animation:fadeUp .3s ease;box-shadow:0 24px 80px rgba(0,0,0,.18)">
+    <div onclick="closeModal()" style="position:absolute;top:18px;right:18px;width:32px;height:32px;background:var(--surface-2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--ink-3)">✕</div>
+    <div id="dm-content"></div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const CONTACTS=[
+  {id:1,name:'Cascade Industrial Services',type:'company',initials:'CI',lastSeen:'Apr 20',health:'g',mentions:14,role:'Portfolio Company',loc:'Chicago, IL',email:'info@cascadeindustrial.com',meets:12,emails:47,tl:[{d:'Apr 20',t:'Q1 financial review — margin bridge flagged for follow-up with Sarah'},{d:'Apr 14',t:'Contract renewal discussion with Rick Halverson; counter expected by May 5'},{d:'Mar 28',t:'3-year strategy session — Gulf Coast expansion confirmed'}]},
+  {id:2,name:'Mike Devereux',type:'person',initials:'MD',lastSeen:'Apr 18',health:'a',mentions:6,role:'VP Operations, Cascade Industrial',loc:'Chicago, IL',email:'mike.devereux@cascade.com',meets:8,emails:23,tl:[{d:'Apr 18',t:'1:1 — comp discussion deferred; Mike flagged concern about equity structure'},{d:'Apr 6',t:'Email: union contract language — three clauses sent to legal for review'},{d:'Mar 18',t:'Performance review: strong on ops execution, development needed cross-team'}]},
+  {id:3,name:'Sarah Chen',type:'person',initials:'SC',lastSeen:'Apr 17',health:'g',mentions:5,role:'CFO, Cascade Industrial',loc:'Chicago, IL',email:'sarah.chen@cascade.com',meets:11,emails:38,tl:[{d:'Apr 17',t:'Q2 board deck draft shared — Sarah requested EBITDA bridge slide added'},{d:'Apr 9',t:'Monthly flash: Q1 at 94% of plan; customer concentration improving'},{d:'Mar 31',t:'2026 financial model revised — capex timeline pushed 60 days'}]},
+  {id:4,name:'Jennifer Ruiz',type:'person',initials:'JR',lastSeen:'Apr 16',health:'g',mentions:4,role:'VP Sales Candidate',loc:'Dallas, TX',email:'jennifer.ruiz@gmail.com',meets:4,emails:12,tl:[{d:'Apr 16',t:'Final round — panel consensus to move forward with offer this week'},{d:'Apr 3',t:'2nd round panel: positive signal from ops and finance'},{d:'Mar 22',t:'Initial screen — sourced through Jake Wren referral'}]},
+  {id:5,name:'Marietta Foods',type:'company',initials:'MF',lastSeen:'Apr 15',health:'a',mentions:6,role:'Key Customer',loc:'Atlanta, GA',email:'procurement@mariettafoods.com',meets:9,emails:31,tl:[{d:'Apr 15',t:'QBR prep call — three open Q4 action items still unresolved going into Tuesday'},{d:'Apr 2',t:'Contract renewal: Marietta requesting 90-day pricing extension'},{d:'Mar 10',t:'NPS returned at 62, up from 48 in Q4'}]},
+  {id:6,name:'Dan Kowalski',type:'person',initials:'DK',lastSeen:'Apr 15',health:'g',mentions:5,role:'Plant Manager, Cascade Industrial',loc:'Gary, IN',email:'dan.kowalski@cascade.com',meets:6,emails:14,tl:[{d:'Apr 15',t:'Line 3 downtime flagged — affecting April output and Q2 board deck numbers'},{d:'Apr 8',t:'Ops debrief: March throughput hit record; Q2 capacity plan submitted'},{d:'Mar 20',t:'Safety audit: zero violations, commendation issued by insurer'}]},
+  {id:7,name:'Karen Vance',type:'person',initials:'KV',lastSeen:'Apr 15',health:'a',mentions:2,role:'Board Observer, Maven Capital',loc:'New York, NY',email:'kvance@mavencapital.com',meets:4,emails:9,tl:[{d:'Apr 15',t:'Q1 board call — Karen pressed on customer concentration and Marietta dependency'},{d:'Feb 12',t:'Intro call; background in B2B industrial services and PE rollups'}]},
+  {id:8,name:'Heartland Clean Co.',type:'company',initials:'HC',lastSeen:'Apr 14',health:'g',mentions:14,role:'Acquisition Target',loc:'Des Moines, IA',email:'',meets:6,emails:22,tl:[{d:'Apr 14',t:'NDA executed — financial package expected within 10 business days'},{d:'Apr 7',t:'Management intro: seller highly motivated; family health driving timeline'},{d:'Mar 28',t:'Initial screen: $4.2M EBITDA, 6.1x preliminary ask, strong recurring revenue'}]},
+  {id:9,name:'Rick Halverson',type:'person',initials:'RH',lastSeen:'Apr 14',health:'g',mentions:2,role:'General Counsel, Cascade Industrial',loc:'Chicago, IL',email:'r.halverson@cascade.com',meets:3,emails:11,tl:[{d:'Apr 14',t:'Union contract review — three clauses escalated; external counsel engaged'},{d:'Mar 30',t:'Gary facility lease renewal — recommending 5-year term with option'}]},
+  {id:10,name:'SaniPro',type:'company',initials:'SP',lastSeen:'Apr 4',health:'r',mentions:5,role:'Key Customer',loc:'Louisville, KY',email:'ops@sanipro.com',meets:5,emails:16,tl:[{d:'Apr 4',t:'Intel: SaniPro evaluating second-source supplier — risk flagged for monitoring'},{d:'Mar 14',t:'Relationship check-in with procurement lead — satisfied, open to volume increase'}]},
+  {id:11,name:'Janet Brusser',type:'person',initials:'JB',lastSeen:'Apr 2',health:'a',mentions:3,role:'VP Procurement, Marietta Foods',loc:'Atlanta, GA',email:'j.brusser@mariettafoods.com',meets:5,emails:18,tl:[{d:'Apr 2',t:'Contract call — Janet requested 90-day price hold; decision still pending'},{d:'Mar 10',t:'QBR post-mortem: three open items, committed to close by April 30'}]},
+];
+
+const DOCS=[
+  {name:'margin-bridge-acquisition',date:'4/3/2026',size:'4.3 KB',icon:'📈'},
+  {name:'customer-concentration-analysis',date:'3/24/2026',size:'3.0 KB',icon:'📊'},
+  {name:'mike-devereux-comp-review',date:'3/18/2026',size:'3.5 KB',icon:'📄'},
+  {name:'heartland-customer-presentation',date:'3/10/2026',size:'3.6 KB',icon:'📋'},
+  {name:'sanipro-intel-q1-summary',date:'2/20/2026',size:'2.9 KB',icon:'📄'},
+  {name:'cascade-3-year-strategy',date:'2/14/2026',size:'3.6 KB',icon:'📈'},
+  {name:'q1-2026-board-deck',date:'2/9/2026',size:'2.3 KB',icon:'📋'},
+  {name:'vp-operations-hiring-brief',date:'1/28/2026',size:'4.3 KB',icon:'📄'},
+  {name:'heartland-clean-co-overview',date:'1/20/2026',size:'4.5 KB',icon:'📄'},
+  {name:'marietta-foods-account-history',date:'1/12/2026',size:'3.4 KB',icon:'📄'},
+  {name:'tom-ridley-1-1-running-notes',date:'11/10/2025',size:'3.1 KB',icon:'📝'},
+  {name:'union-contract-summary',date:'10/14/2025',size:'2.4 KB',icon:'📄'},
+];
+
+const SIGNALS=[
+  {id:1,type:'email',priority:'high',title:'Heartland Clean Co. — Financial Package Received',body:'CIM and trailing 36-month financials received from broker. $4.2M EBITDA confirmed on review. Management call being scheduled within diligence window.',time:'8:14 AM · Today',tag:'M&A'},
+  {id:2,type:'intel',priority:'high',title:'SaniPro evaluating second-source supplier',body:'Procurement contact mentioned competitor evaluation at last check-in April 4. No relationship call since. Window to act is closing.',time:'Yesterday',tag:'Customer Risk'},
+  {id:3,type:'calendar',priority:'medium',title:'Q2 board deck dry-run — 48 hours out',body:'Sarah Chen has not confirmed updated EBITDA numbers from Dan. Line 3 downtime may affect Q2 projections.',time:'Yesterday',tag:'Board Prep'},
+  {id:4,type:'email',priority:'high',title:'Mike Devereux equity concern — unresolved going into Wednesday',body:'His April 6 email flagged three equity structure concerns. None have been formally addressed before Wednesday\'s 1:00 PM comp call.',time:'2 days ago',tag:'HR'},
+  {id:5,type:'intel',priority:'medium',title:'Marietta Foods NPS up 14 points Q4→Q1',body:'Account health improving significantly. Score: 62 vs 48 last quarter. Strong signal going into today\'s QBR with Janet Brusser.',time:'2 days ago',tag:'Customer'},
+  {id:6,type:'deal',priority:'high',title:'Heartland NDA executed — 10-business-day clock started',body:'Financial package expected by May 9. Assign deal lead and schedule management meeting within the diligence window.',time:'Apr 14',tag:'Pipeline'},
+  {id:7,type:'email',priority:'low',title:'Karen Vance board follow-up — no response sent',body:'She pressed on customer concentration at Q1 board call. No formal written response sent yet. A brief note would close the loop.',time:'Apr 15',tag:'Board'},
+  {id:8,type:'intel',priority:'medium',title:'Line 3 downtime — April output impact',body:'Dan Kowalski flagged approximately 8% throughput reduction for April. Sarah will need updated numbers before the board deck dry-run Thursday.',time:'Apr 15',tag:'Operations'},
+  {id:9,type:'email',priority:'high',title:'Janet Brusser — partial response on Q4 action items',body:'Email received 5:32 PM yesterday. Janet has closed 2 of 3 open items. Third needs more time. Going into today\'s QBR with one item still open.',time:'Yesterday 5:32 PM',tag:'Customer'},
+  {id:10,type:'intel',priority:'high',title:'Union contract expires May 15 — 16 days out',body:'Three clauses flagged by Rick Halverson conflict with planned operational changes. External counsel engaged with $40K budget. No resolution timeline confirmed.',time:'Apr 15',tag:'Legal'},
+  {id:11,type:'deal',priority:'medium',title:'Heartland seller motivated — 90-day close target',body:'Family health situation driving urgency on seller side. 90-day close window favors buyers who move quickly through diligence.',time:'Apr 14',tag:'M&A'},
+  {id:12,type:'calendar',priority:'high',title:'Jennifer Ruiz offer — Friday deadline',body:'Panel consensus locked. Jake Wren referral. Flight risk increases each day. Offer should be called in, not just emailed.',time:'Today',tag:'Hiring'},
+  {id:13,type:'intel',priority:'medium',title:'Gulf Coast expansion confirmed — March 28',body:'Strategic expansion approved. Per customer concentration model, reduces Marietta\'s share from 23% to ~18% by 2028.',time:'Mar 28',tag:'Strategy'},
+  {id:14,type:'email',priority:'low',title:'Rick Halverson — Gary lease recommendation',body:'Rick is recommending a 5-year term with option on the Gary IN facility. No action taken yet.',time:'Mar 30',tag:'Facilities'},
+  {id:15,type:'intel',priority:'medium',title:'MidWest Clean Services quoted SaniPro — Q4 2025',body:'Competitor pricing proposal confirmed from Q4 intel. SaniPro procurement lead has 3-year tenure. Window for proactive engagement is now.',time:'Feb 20',tag:'Competitive'},
+];
+
+const WATCHLIST=[
+  {id:1,name:'Heartland Clean Co.',stage:'Due Diligence',update:'NDA executed Apr 14. Financials expected May 9. Management call to schedule.',risk:'med',icon:'🏭'},
+  {id:2,name:'SaniPro — Supplier Risk',stage:'Customer Risk',update:'Evaluating second-source supplier. No check-in since Apr 4. Relationship call overdue.',risk:'high',icon:'⚠️'},
+  {id:3,name:'Marietta Foods Renewal',stage:'Contract',update:'Janet Brusser requesting 90-day price hold. Decision pending. Three Q4 items due Apr 30.',risk:'med',icon:'📋'},
+  {id:4,name:'Jennifer Ruiz Offer',stage:'Hiring',update:'Panel consensus locked. Offer due Friday Apr 30. Draft in Vault.',risk:'low',icon:'👤'},
+  {id:5,name:'Mike Devereux Comp',stage:'HR',update:'Equity structure concern unresolved. Comp discussion Wed 1PM. Sarah\'s revised model in Vault.',risk:'high',icon:'⚠️'},
+  {id:6,name:'Q2 Board Deck',stage:'Board Prep',update:'Dry-run Thu 2PM. Need Dan\'s updated output numbers. EBITDA bridge slide requested.',risk:'med',icon:'📊'},
+];
+
+const DECISIONS=[
+  {id:1,date:'Apr 14, 2026',title:'Execute NDA with Heartland Clean Co.',context:'Seller highly motivated due to family health situation. $4.2M EBITDA at 6.1x preliminary ask with strong recurring revenue profile.',decision:'Proceed with NDA and request full financial package. Assign deal lead.',outcome:'pending',tag:'M&A'},
+  {id:2,date:'Apr 9, 2026',title:'Defer Mike Devereux comp discussion to April 30',context:'Mike flagged equity structure concerns in March 1:1. Sarah\'s revised equity model was not ready for review.',decision:'Delay comp conversation until Sarah finalizes revised equity structure. Brief Mike on timeline.',outcome:'open',tag:'HR'},
+  {id:3,date:'Apr 3, 2026',title:'Proceed with Jennifer Ruiz for VP Sales',context:'Three-round panel process complete. Sourced via Jake Wren referral. Strong go-to-market fit confirmed by panel.',decision:'Extend offer by April 30 to avoid flight risk. Comp benchmarked at market.',outcome:'in-progress',tag:'Hiring'},
+  {id:4,date:'Mar 28, 2026',title:'Approve Gulf Coast expansion planning phase',context:'3-year strategy session confirmed $8–12M revenue opportunity. Board broadly supportive of expansion.',decision:'Approve planning budget. Sarah to model three capex scenarios for board by Q2.',outcome:'in-progress',tag:'Strategy'},
+  {id:5,date:'Mar 18, 2026',title:'Engage external counsel on union contract',context:'Rick Halverson flagged three clauses conflicting with planned Gary facility operational changes.',decision:'Retain external labor counsel. Approved $40K budget. Target resolution before May 15 renewal.',outcome:'resolved',tag:'Legal'},
+];
+
+const MEETING_PREPS={
+  'marietta-qbr':{title:'Marietta QBR',time:'Today · 9:30 AM',with:'Janet Brusser, VP Procurement, Marietta Foods',context:'Marietta is your largest customer at ~23% of revenue. NPS improved from 48 to 62 in Q1. Three Q4 action items committed for April 30 are still unresolved.',bullets:['Janet will likely surface the 90-day pricing extension request — no decision has been sent','Three Q4 open items: track whether she brings receipts or asks for another extension','Contract renewal timing: their fiscal year ends June 30, leverage window is now'],watch:['Line 3 downtime may have affected Marietta deliveries — check with Dan first','Heartland acquisition could shift your cost structure — don\'t surface this yet']},
+  'dan-debrief':{title:'Dan Kowalski — Ops Debrief',time:'Today · 11:00 AM',with:'Dan Kowalski, Plant Manager, Gary IN',context:'March throughput hit a record high. Q2 capacity plan already submitted. Line 3 downtime is the priority topic — it\'s affecting April output numbers Sarah needs for the board deck.',bullets:['Get updated April output numbers — Sarah needs them for the dry-run Thursday','Understand root cause and recovery timeline for Line 3','Q2 capacity plan — confirm numbers haven\'t changed'],watch:['Dan\'s safety audit came back clean — worth acknowledging at the start','If downtime extends into May, Q2 projections need revision before the board call']},
+  'mike-comp':{title:'Mike Devereux — Comp Discussion',time:'Wednesday · 1:00 PM',with:'Mike Devereux, VP Operations, Cascade Industrial',context:'April 18 notes flag concern about the equity structure. Comp discussion was deferred in March pending Sarah\'s revised model. That model is now in Vault.',bullets:['Bring Sarah\'s revised equity structure from Vault — review it before this call','Three union contract clauses Mike sent to legal in April — what\'s the status?','His performance review: strong execution, cross-team development is the gap'],watch:['He may push for accelerated vesting — decide your position in advance','This conversation links to the Jennifer Ruiz hire — don\'t let comp optics bleed over']},
+  'board-dryrun':{title:'Q2 Board Deck Dry-Run',time:'Thursday · 2:00 PM',with:'Sarah Chen, CFO',context:'Q1 landed at 94% of plan. Sarah requested an EBITDA bridge slide. Dan\'s Line 3 output numbers will affect the deck — get those from the ops debrief Tuesday.',bullets:['Get Dan\'s updated April output numbers before this meeting','EBITDA bridge slide: confirm Sarah has all the inputs she needs','Customer concentration narrative — Karen Vance pressed on this at the Q1 board call'],watch:['Karen will almost certainly re-raise Marietta dependency — prepare a narrative','Heartland acquisition timing may be relevant context for the board\'s risk lens']},
+  'leadership':{title:'Leadership Sync',time:'Monday · 9:00 AM',with:'Full leadership team',context:'Weekly leadership sync. Cross-functional update on operations, finance, and hiring.',bullets:['Line 3 downtime — ensure Dan brings an update','Jennifer Ruiz offer decision — confirm Friday timeline with hiring panel','Q2 capacity plan: any cross-team dependencies?'],watch:['Keep the Heartland NDA confidential — not ready for the broader team']},
+  'sarah-1-1':{title:'1:1 Sarah Chen',time:'Monday · 10:30 AM',with:'Sarah Chen, CFO',context:'Regular 1:1. Key open items: board deck EBITDA inputs, Q2 financial model, equity structure for Mike\'s comp discussion.',bullets:['EBITDA bridge slide for board deck — what does she still need?','Revised equity model for Mike Devereux — confirm it\'s finalized','Q2 financial model: how sensitive are projections to Line 3 downtime?'],watch:['If capex timeline slips further, it affects the Gulf Coast expansion narrative']},
+  'cascade-review':{title:'Cascade Industries Review',time:'Wednesday · 10:00 AM',with:'Portfolio company leadership',context:'Quarterly business review for Cascade Industrial. Covers operations, finance, hiring, and strategic priorities.',bullets:['Q1 results: 94% of plan — strong but below target','Line 3 downtime: April impact quantified?','Jennifer Ruiz offer: VP Sales seat needs to be filled'],watch:['Customer concentration is the board\'s primary concern — come with data']},
+  'jen-offer':{title:'Jennifer Ruiz — Offer Review',time:'Friday · 3:30 PM',with:'Jennifer Ruiz, VP Sales Candidate',context:'Final step before extending the offer. Panel consensus is on record. Comp benchmarked at market rate. Offer draft is in Vault.',bullets:['Offer letter draft is in Vault — review before this call','Panel notes: positive across ops, finance, and culture','Source: Jake Wren referral — mention it, it matters to her'],watch:['Flight risk increases the longer the offer sits — don\'t let this slip past Friday','Keep Mike Devereux\'s comp situation separate — different structure, different conversation']},
+};
+
+// ===== LOGIN =====
+function doLogin(){
+  const e=document.getElementById('em').value.trim();
+  const p=document.getElementById('pw').value;
+  const err=document.getElementById('login-err');
+  if(e==='operand@acquaint.com'&&p==='secondbrain'){
+    err.style.display='none';
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('onboarding-screen').classList.add('active');
+  } else {
+    err.style.display='block';
+    const card=document.querySelector('.login-card');
+    card.style.animation='none';
+    card.offsetHeight;
+    card.style.animation='shake .4s ease';
+    setTimeout(()=>card.style.animation='',500);
+  }
+}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+// ===== ONBOARDING =====
+let curStep=0;
+function goStep(n){
+  document.getElementById('s'+curStep).classList.remove('active');
+  curStep=n;
+  document.getElementById('s'+n).classList.add('active');
+  for(let i=0;i<=2;i++){
+    const d=document.getElementById('d'+i);
+    i<=n?d.classList.add('active'):d.classList.remove('active');
+  }
+}
+function selUC(el){document.querySelectorAll('.uc-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel')}
+function enterApp(){
+  const name=document.getElementById('ob-name').value.trim()||'John';
+  const tracks=[...document.querySelectorAll('.chip.sel')].map(c=>c.textContent).join(', ');
+  const ucEl=document.querySelector('.uc-opt.sel');
+  const useCase=ucEl?ucEl.querySelector('.uc-t').textContent:'Executive';
+  window.userPrefs={name,tracks,useCase};
+  document.getElementById('onboarding-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+  initApp(name);
+  // Show blinking notification on morning brief tab
+  document.querySelector('.ni-badge').classList.add('show');
+}
+
+// ===== APP INIT =====
+function initApp(name){
+  buildBrief(name);
+  buildPriorityStack();
+  buildSignals();
+  buildContacts();
+  buildVault();
+  buildWatchlist();
+  buildDecisions();
+  setTimeout(initGraph,200);
+}
+
+// ===== BRIEF =====
+function buildBrief(name){
+  const body=document.getElementById('brief-body');
+  const items=[
+    {t:'p',v:`${name} — three things actually matter this week, and they're all stacked.`},
+    {t:'p',v:`The Mike conversation. The Marietta synthesis from today's QBR. Jennifer's offer going out Friday. They've been in your notes for weeks; this is the week each has its own forcing function — and they depend on each other in order. Mike before Jennifer. Dan before Marietta. Get the sequence right.`},
+    {t:'div'},{t:'st',v:'This week at a glance'},
+    {t:'metrics',v:[
+      {label:'Q1 EBITDA Attainment',val:'94%',sub:'$2.8M of $3.0M plan'},
+      {label:'Pipeline value',val:'$25.6M',sub:'Heartland Clean Co. — active diligence'},
+      {label:'Open action items',val:'7',sub:'3 high priority this week'},
+      {label:'Relationship alerts',val:'2',sub:'SaniPro · Mike Devereux'},
+    ]},
+    {t:'div'},{t:'st',v:'Priorities surfaced by Second Brain'},
+    {t:'cards',v:[
+      {label:'🔴 Urgent · Wed 1 PM',title:'Mike Devereux — comp discussion',body:'Equity concern flagged three times since March. Sarah\'s revised structure is in Vault. Come prepared.'},
+      {label:'🟡 Today · 9:30 AM',title:'Marietta QBR — 3 open items',body:'Janet Brusser. Q4 action items were committed for Apr 30. Today is the forcing function.'},
+      {label:'🟢 In motion · Fri EOD',title:'Jennifer Ruiz — offer to go Friday',body:'Panel consensus locked. Flight risk increases each day. Offer draft is in Vault.'},
+      {label:'🔵 Risk signal · Act this week',title:'SaniPro evaluating second source',body:'No check-in since Apr 4. Represents 18% of revenue. A casual call this week closes the window.'},
+    ]},
+    {t:'div'},{t:'st',v:'What Second Brain picked up overnight'},
+    {t:'p',v:`Heartland Clean Co. financial package arrived this morning — CIM and 36-month trailing financials. $4.2M EBITDA confirmed. Second Brain is watching the inbox for the management call scheduling thread.`},
+    {t:'p',v:`Dan Kowalski flagged Line 3 downtime in a 6:14 AM message. Approximately 8% throughput reduction for April. Sarah will need these numbers before the board deck dry-run Thursday. Pull them at the 11 AM debrief today.`},
+    {t:'p',v:`Mike Devereux has not opened the Vault link Sarah sent with the revised equity model. Second Brain flagged this as a pre-meeting risk — he may arrive Wednesday without having reviewed the terms.`},
+    {t:'div'},{t:'st',v:'Email digest — most important threads'},
+    {t:'emails',v:[
+      {from:'Heartland broker — RE: Financial Package',time:'8:14 AM',preview:'Attached per our call — CIM, financials, and 3-year projections. Let us know if you need anything additional before the management call.'},
+      {from:'Janet Brusser — RE: QBR Agenda',time:'Yesterday 5:32 PM',preview:'Looking forward to tomorrow. I do want to spend time on the Q4 open items — I\'ve prepared responses on two of the three. The third will need a bit more time.'},
+      {from:'Sarah Chen — RE: Board Deck Draft',time:'Yesterday 4:17 PM',preview:'Draft is in the Vault. Still need Dan\'s Line 3 numbers for the EBITDA slide. Dry-run is Thursday — can you get those from him today?'},
+    ]},
+    {t:'div'},{t:'st',v:'On your calendar this week'},
+    {t:'cards',v:[
+      {label:'Tue Apr 29 · Today',title:'Marietta QBR · 9:30 AM',body:'Janet Brusser. She has answers on 2 of 3 open items. Prep brief available — click the event.'},
+      {label:'Tue Apr 29 · Today',title:'Dan Kowalski ops debrief · 11:00 AM',body:'Line 3 numbers are the priority. Get them to Sarah by end of day.'},
+      {label:'Wed Apr 30',title:'Mike Devereux comp · 1:00 PM',body:'Equity structure conversation. Sarah\'s revised model in Vault. He hasn\'t opened the link yet.'},
+      {label:'Thu May 1',title:'Q2 board deck dry-run · 2:00 PM',body:'Sarah Chen. Deck draft ready. Needs Dan\'s updated numbers first.'},
+    ]},
+  ];
+  body.innerHTML='';
+  const els=[];
+  items.forEach(item=>{
+    if(item.t==='p'){const p=document.createElement('p');p.className='bp';p.textContent=item.v;body.appendChild(p);els.push(p);}
+    else if(item.t==='div'){const d=document.createElement('div');d.className='bdiv';body.appendChild(d);els.push(d);}
+    else if(item.t==='st'){const s=document.createElement('div');s.className='bst';s.textContent=item.v;body.appendChild(s);els.push(s);}
+    else if(item.t==='cards'){
+      const g=document.createElement('div');g.className='bcards';
+      item.v.forEach(c=>{
+        const el=document.createElement('div');el.className='bcard';
+        el.innerHTML=`<div class="bc-label">${c.label}</div><div class="bc-title">${c.title}</div><div class="bc-body">${c.body}</div>`;
+        g.appendChild(el);
+      });
+      body.appendChild(g);els.push(g);
+    } else if(item.t==='metrics'){
+      const g=document.createElement('div');
+      g.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease';
+      item.v.forEach(m=>{
+        const el=document.createElement('div');
+        el.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;';
+        el.innerHTML=`<div style="font-family:\'Cormorant Garamond\',serif;font-size:26px;font-weight:600;color:var(--ink);margin-bottom:2px">${m.val}</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:4px">${m.label}</div><div style="font-size:11px;color:var(--accent)">${m.sub}</div>`;
+        g.appendChild(el);
+      });
+      body.appendChild(g);els.push(g);
+    } else if(item.t==='emails'){
+      const g=document.createElement('div');
+      g.style.cssText='display:flex;flex-direction:column;gap:8px;margin-bottom:28px;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease';
+      item.v.forEach(e=>{
+        const el=document.createElement('div');
+        el.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px 18px;cursor:pointer;transition:all var(--tr)';
+        el.onmouseenter=()=>el.style.borderColor='var(--accent)';
+        el.onmouseleave=()=>el.style.borderColor='var(--border)';
+        el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><span style="font-size:13px;font-weight:600;color:var(--ink)">${e.from}</span><span style="font-size:11px;color:var(--ink-3)">${e.time}</span></div><div style="font-size:12px;color:var(--ink-2);line-height:1.55">${e.preview}</div>`;
+        g.appendChild(el);
+      });
+      body.appendChild(g);els.push(g);
+    }
+  });
+  els.forEach((el,i)=>setTimeout(()=>{el.classList.add('rev');el.style.opacity='1';el.style.transform='none';},280+i*90));
+}
+
+// ===== AI STREAMING HELPER =====
+async function callAI(message, history, onChunk, onDone, onError) {
+  try {
+    const res = await fetch('/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message, history, prefs: window.userPrefs||null})
+    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6);
+        if (payload === '[DONE]') { onDone && onDone(); return; }
+        try {
+          const d = JSON.parse(payload);
+          if (d.text) onChunk(d.text);
+          if (d.error) { onError && onError(d.error); return; }
+        } catch {}
+      }
+    }
+    onDone && onDone();
+  } catch(e) {
+    onError && onError(e.message);
+  }
+}
+
+// ===== BRIEF CHAT =====
+function sendBriefChat(){
+  const inp=document.getElementById('bch-input');
+  const txt=inp.value.trim();if(!txt)return;
+  const msgs=document.getElementById('bch-msgs');
+  const ub=document.createElement('div');ub.className='bch-bubble user';ub.textContent=txt;
+  msgs.appendChild(ub);inp.value='';msgs.scrollTop=msgs.scrollHeight;
+  const thinking=document.createElement('div');thinking.className='bch-thinking';
+  thinking.innerHTML='<span></span><span></span><span></span>';
+  msgs.appendChild(thinking);msgs.scrollTop=msgs.scrollHeight;
+  let ab=null;
+  callAI(txt,[],
+    (chunk)=>{
+      if(!ab){thinking.remove();ab=document.createElement('div');ab.className='bch-bubble ai';ab.textContent='';msgs.appendChild(ab);}
+      ab.textContent+=chunk;msgs.scrollTop=msgs.scrollHeight;
+    },
+    null,
+    (err)=>{if(thinking.parentNode)thinking.remove();const eb=document.createElement('div');eb.className='bch-bubble ai';eb.textContent='⚠️ '+err;msgs.appendChild(eb);msgs.scrollTop=msgs.scrollHeight;}
+  );
+}
+
+// ===== PRIORITY STACK =====
+const PSTACK=[
+  {urg:'hi',name:'Mike comp conversation',when:'Wednesday 1:00 PM — equity prep needed',
+   deadline:'Wednesday, April 30 · 1:00 PM',
+   summary:'Mike Devereux has flagged the equity structure three times since March. The comp discussion was deferred pending Sarah\'s revised model — which is now in Vault. This conversation cannot be deferred again without real departure risk.',
+   actions:['Pull and review Sarah\'s revised equity model from Vault before Wednesday','Decide your position on accelerated vesting — go in with a number','Check status of the three union contract clauses Mike sent to legal in April','Keep this separate from the Jennifer Ruiz offer conversation'],
+   contacts:['Mike Devereux','Sarah Chen'],risk:'Mike is the operational anchor of Cascade Industrial. A failed comp conversation heading into Q2 could trigger departure risk at the worst possible time.'},
+  {urg:'hi',name:'Extend Jennifer Ruiz offer',when:'Friday deadline — flight risk if delayed',
+   deadline:'Friday, May 2 · End of day',
+   summary:'Three-round panel complete. Consensus is locked. Jennifer was sourced via Jake Wren referral and has strong go-to-market fit. Every day without an offer increases flight risk — she is almost certainly in other processes.',
+   actions:['Pull the offer letter draft from Vault','Confirm comp is benchmarked to market — Sarah has the model','Call Jennifer before sending the letter — warm the conversation first','Reference Jake Wren — it matters to her'],
+   contacts:['Jennifer Ruiz'],risk:'If the offer slips past Friday, assume she is gone. There is no qualified backup in the pipeline.'},
+  {urg:'hi',name:'SaniPro check-in call',when:'This week — second-source risk live',
+   deadline:'This week — before Friday',
+   summary:'April 4 intel flagged SaniPro is evaluating a second-source supplier. No relationship call since. SaniPro is ~18% of revenue. A casual check-in call now is the lowest-effort way to read the room before this becomes a crisis.',
+   actions:['Call the SaniPro procurement lead — keep it casual, not a sales call','Reference the March conversation where they signaled satisfaction and openness to volume increase','Gauge whether the evaluation is exploratory or active','Report back to Sarah — this affects Q3 revenue assumptions'],
+   contacts:['SaniPro'],risk:'Losing SaniPro would accelerate the customer concentration issue Karen Vance already flagged at the Q1 board call.'},
+  {urg:'md',name:'Dan: get Line 3 numbers',when:'Before Thursday board deck dry-run',
+   deadline:'Before Thursday 2:00 PM',
+   summary:'Line 3 downtime is affecting April output. Dan has the numbers. Sarah needs them to finalize Q2 projections before Thursday\'s board deck dry-run. This is a pure dependency — the deck cannot be finalized without it.',
+   actions:['Get the updated April output numbers at today\'s 11:00 AM debrief','Understand recovery timeline — does the impact extend into May?','Send numbers to Sarah immediately after the Dan debrief','Flag to Sarah if the April impact exceeds 10% — that changes the board narrative'],
+   contacts:['Dan Kowalski','Sarah Chen'],risk:'If Sarah doesn\'t have updated numbers, the EBITDA slide will be wrong going into the board call. That\'s a credibility problem with Karen Vance.'},
+  {urg:'md',name:'Close Marietta Q4 items',when:'Committed for April 30',
+   deadline:'April 30 — committed by Janet Brusser',
+   summary:'Three Q4 action items were committed for April 30 at the last QBR post-mortem. Today\'s QBR is the forcing function. Janet Brusser will either have answers or she won\'t — and the answer determines your contract renewal posture.',
+   actions:['Go into the QBR with the three items documented and ready','Push for written confirmation — email summary before end of day','If items remain open, agree on a hard final close date in writing','Update the Marietta account history in Vault after the call'],
+   contacts:['Marietta Foods','Janet Brusser'],risk:'Marietta is ~23% of revenue. Unresolved operational items heading into a contract renewal is a risk multiplier.'},
+  {urg:'lo',name:'Karen Vance follow-up note',when:'After board deck dry-run Thursday',
+   deadline:'After Thursday dry-run',
+   summary:'Karen pressed on customer concentration at the Q1 board call and no written response has been sent. A brief note after the dry-run would close the loop and demonstrate the concern is being addressed — not ignored.',
+   actions:['Draft a 3-paragraph email after Thursday\'s dry-run','Reference the customer concentration slide in the Q2 deck','Lead with Marietta NPS improvement (62 vs 48) as the positive signal','Acknowledge Heartland acquisition as the path to diversification'],
+   contacts:['Karen Vance'],risk:'Low immediate risk. Long-term, a board observer who feels unheard becomes a friction source.'},
+];
+function buildPriorityStack(){
+  const c=document.getElementById('pstack-items');
+  PSTACK.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className=`ps-item ${p.urg}`;
+    div.style.animationDelay=(i*60)+'ms';
+    div.style.cursor='pointer';
+    div.innerHTML=`<div class="ps-rank">${i+1}</div><div class="ps-urg ${p.urg}">${p.urg==='hi'?'High':p.urg==='md'?'Medium':'Low'}</div><div class="ps-name">${p.name}</div><div class="ps-when">${p.when}</div>`;
+    div.onclick=()=>openPstackModal(i);
+    c.appendChild(div);
+  });
+}
+function openPstackModal(i){
+  const p=PSTACK[i];
+  const urgLabel=p.urg==='hi'?'High Priority':p.urg==='md'?'Medium Priority':'Low Priority';
+  const urgColor=p.urg==='hi'?'var(--red)':p.urg==='md'?'var(--accent)':'var(--green)';
+  document.getElementById('dm-content').innerHTML=`
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:${urgColor};margin-bottom:12px">${urgLabel}</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.2">${p.name}</div>
+    <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:20px">${p.deadline}</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--ink-2);line-height:1.7;margin-bottom:28px">${p.summary}</div>
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px">Action items</div>
+    <div style="margin-bottom:24px">${p.actions.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink);line-height:1.55"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px"></div>${a}</div>`).join('')}</div>
+    <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:var(--rs);padding:14px 16px;font-size:13px;color:#c0392b;line-height:1.55">
+      <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:5px">Risk if delayed</span>${p.risk}
+    </div>
+    <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px">${p.contacts.map(c=>`<span style="font-size:11px;background:var(--surface-2);color:var(--ink-3);padding:4px 12px;border-radius:20px">${c}</span>`).join('')}</div>`;
+  const modal=document.getElementById('detail-modal');
+  modal.style.display='flex';
+}
+function closeModal(){document.getElementById('detail-modal').style.display='none';}
+
+// ===== SIGNALS =====
+function buildSignals(filter='all'){
+  const c=document.getElementById('signal-list');c.innerHTML='';
+  const filtered=filter==='all'?SIGNALS:SIGNALS.filter(s=>s.type===filter);
+  filtered.forEach((s,i)=>{
+    const div=document.createElement('div');div.className='sig';div.style.animationDelay=(i*50)+'ms';
+    div.innerHTML=`<div class="sig-top"><span class="sig-type st-${s.type}">${s.type}</span><span class="sig-pri ${s.priority}">${s.priority} priority</span></div><div class="sig-title">${s.title}</div><div class="sig-body">${s.body}</div><div class="sig-foot"><span class="sig-time">${s.time}</span><span class="sig-tag">${s.tag}</span><button class="sig-act" onclick="actOnSignal('${s.title.replace(/'/g,"\\'")}')">Act on this →</button></div>`;
+    c.appendChild(div);
+  });
+}
+function actOnSignal(title){
+  const chatNav=document.querySelector('.ni[onclick*="chat"]');
+  showSec('chat',chatNav);
+  const inp=document.getElementById('chat-in');
+  inp.value='Help me act on this signal: '+title;
+  inp.focus();
+}
+function filterSignals(type,el){
+  document.querySelectorAll('.ff').forEach(f=>f.classList.remove('sel'));
+  el.classList.add('sel');
+  buildSignals(type);
+}
+
+// ===== NAVIGATION =====
+function showSec(name,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='graph')setTimeout(()=>{resizeGraph();layoutGraph();drawGraph();},30);
+  if(name==='chief')document.querySelector('.ni-badge').classList.remove('show');
+}
+
+// ===== CONTACTS =====
+function buildContacts(list){
+  const c=document.getElementById('clist-items');c.innerHTML='';
+  (list||CONTACTS).forEach(ct=>{
+    const div=document.createElement('div');div.className='citem';
+    div.onclick=()=>showContact(ct.id);
+    const hd=ct.health==='g'?'hd-g':ct.health==='a'?'hd-a':'hd-r';
+    div.innerHTML=`<div class="cav ${ct.type==='company'?'co':''}">${ct.initials}<div class="health-dot ${hd}"></div></div><div><div class="ci-name">${ct.name}</div><div class="ci-meta"><span class="ctag ${ct.type==='person'?'tp':'tc'}">${ct.type==='person'?'Person':'Company'}</span><span class="ci-date">${ct.lastSeen} · ${ct.mentions} mentions</span></div></div>`;
+    c.appendChild(div);
+  });
+}
+function filterContacts(q){
+  buildContacts(q?CONTACTS.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())):CONTACTS);
+}
+function showContact(id){
+  const ct=CONTACTS.find(x=>x.id===id);if(!ct)return;
+  document.querySelectorAll('.citem').forEach(el=>{
+    const n=el.querySelector('.ci-name');
+    if(n)el.classList.toggle('active',n.textContent===ct.name);
+  });
+  const healthLabel=ct.health==='g'?'Active — contacted recently':ct.health==='a'?'Warm — last contact 2–4 weeks ago':'Cold — no contact in 30+ days';
+  const hcls=ct.health==='g'?'hd-g':ct.health==='a'?'hd-a':'hd-r';
+  const d=document.getElementById('cdetail');
+  d.innerHTML=`<div class="cda ${ct.type==='company'?'co':''}">${ct.initials}</div>
+  <div class="cdn">${ct.name}</div>
+  <div class="cdr">${ct.role} · ${ct.loc}</div>
+  ${ct.email?`<div class="cdemail">${ct.email}</div>`:''}
+  <div class="chealth-bar"><div class="chb-dot ${hcls}"></div><div class="chb-label">Relationship health</div><div class="chb-val">${healthLabel}</div></div>
+  <div class="cstats">
+    <div class="cstat"><div class="csv">${ct.meets}</div><div class="csl">Meetings</div></div>
+    <div class="cstat"><div class="csv">${ct.emails}</div><div class="csl">Emails</div></div>
+    <div class="cstat"><div class="csv">${ct.mentions}</div><div class="csl">Mentions</div></div>
+  </div>
+  <div class="ctimeline">
+    <div class="tl-title">Interaction history</div>
+    ${ct.tl.map(t=>`<div class="tl-item"><div style="padding-top:5px"><div class="tl-dot"></div></div><div><div class="tl-date">${t.d}</div><div class="tl-text">${t.t}</div></div></div>`).join('')}
+  </div>`;
+}
+
+// ===== VAULT =====
+const DOC_SUMMARIES={
+  'margin-bridge-acquisition':{summary:'Models the EBITDA margin bridge between current Cascade Industrial performance and the post-acquisition target state. Total addressable margin improvement: $1.04M over 24 months across three levers.',points:['Procurement consolidation: $420K opportunity — 3 vendor contracts ready to renegotiate','Headcount efficiency: $280K via 2 FTE G&A reductions through natural attrition','Pricing power: $340K from 4% list price increase in Q3, consistent with market','Sensitivity: if Marietta renews at current terms, bridge narrows by $180K'],ai:'Directly informs the EBITDA bridge slide Sarah requested for the Q2 board deck. Cross-referenced with the Q1 board deck and the 3-year strategy.'},
+  'customer-concentration-analysis':{summary:'Revenue concentration analysis across Cascade Industrial\'s customer base. Top 3 customers represent 52% of revenue: Marietta Foods (23%), SaniPro (18%), Heartland Co. (11%).',points:['Marietta alone at 23% — above the 20% threshold flagged as high concentration','SaniPro intel suggests potential churn risk — April 4 signal active','Three diversification scenarios modeled: organic growth, customer acquisition, geographic expansion','Gulf Coast expansion (approved Mar 28) reduces Marietta concentration to ~18% by 2028'],ai:'Karen Vance referenced this exact concern at the Q1 board call. This document is the foundation for the board response.'},
+  'mike-devereux-comp-review':{summary:'Performance and compensation review for Mike Devereux, VP Operations. Overall rating: Exceeds Expectations on execution, Meets Expectations on leadership development. Includes market benchmarking, equity analysis, and three proposed comp scenarios.',points:['Base comp is 8% below market median for VP Ops in industrial services','Equity structure: original 5-year cliff — Mike has flagged this concern three times','Proposed Scenario B: reduce cliff to 3 years with 25% annual acceleration on performance','Sarah approved Scenario B modeling — use this for Wednesday\'s conversation'],ai:'Feeds directly into Wednesday\'s comp discussion. Scenario B is the recommendation. Mike\'s concerns are documented across three email threads.'},
+  'heartland-customer-presentation':{summary:'Customer-facing presentation prepared for the Heartland Clean Co. management introduction. Covers Cascade\'s service capabilities, operational track record, and growth trajectory.',points:['Zero safety violations in 2025 — resonated strongly with the seller family','Gary facility throughput record featured as operational proof point','Pricing model in appendix — not disclosed, held for negotiation','Three service expansion opportunities identified in Heartland\'s current footprint'],ai:'Cross-referenced with Heartland overview doc and the NDA executed April 14. Financial package expected May 9.'},
+  'sanipro-intel-q1-summary':{summary:'Competitive intelligence summary on the SaniPro relationship. Covers account history, satisfaction indicators, competitive landscape, and the April 4 second-source risk flag.',points:['March procurement call: satisfaction rated "strong" — open to volume increase','SaniPro\'s procurement lead has a 3-year tenure — relationship is institutional','Competitor identified: MidWest Clean Services quoted SaniPro in Q4 2025','Second-source evaluation flagged April 4 — not confirmed, may still be exploratory'],ai:'This is the intelligence basis for the SaniPro Watchlist item. Combined with concentration analysis, this is the highest-urgency customer risk this week.'},
+  'cascade-3-year-strategy':{summary:'Three-year strategic plan for Cascade Industrial 2026–2028. Pillars: Gulf Coast expansion, operational excellence, VP Sales hire, and one strategic acquisition. Heartland Clean Co. is the leading acquisition candidate.',points:['Revenue target: $42M by 2028 (from $31M current run rate)','Gulf Coast expansion approved Mar 28 — capex model in progress with Sarah','VP Sales hire (Jennifer Ruiz) directly supports the organic growth pillar','Heartland acquisition accelerates recurring revenue and reduces customer concentration'],ai:'The strategic frame for every major decision this week — Mike\'s comp, Jennifer\'s offer, Heartland diligence, and the board deck all trace back here.'},
+  'q1-2026-board-deck':{summary:'Q1 2026 board presentation for Cascade Industrial. Results: 94% of EBITDA plan, 97% revenue attainment. Customer concentration flagged by Karen Vance as the primary concern.',points:['Q1 EBITDA: $2.8M vs $3.0M plan — gap driven by Line 3 maintenance costs','Revenue: $7.8M vs $8.0M plan — 97% attainment, strong execution','Karen Vance action item: written response on concentration risk still outstanding','Board unanimously approved Gulf Coast expansion planning budget'],ai:'Baseline for the Q2 board deck being prepared for Thursday. EBITDA bridge, concentration response, and strategic updates all connect here.'},
+  'vp-operations-hiring-brief':{summary:'Job profile and hiring criteria for VP Operations. Note: this brief predates the VP Sales pivot in February 2026. Used for Mike Devereux\'s performance benchmarking and the comp review.',points:['Role scope: 4 direct reports, $18M P&L, multi-site operations','Critical competencies: cross-functional leadership, union relations, capex management','Mike scores high on execution metrics, gap in cross-team leadership','Market comp range: $180–220K base + equity — current structure is below this range'],ai:'Directly relevant to Wednesday\'s comp conversation. Mike\'s compensation is below the range defined in this document.'},
+  'heartland-clean-co-overview':{summary:'Initial screening overview of Heartland Clean Co. as an acquisition target. Des Moines, IA. $4.2M EBITDA on ~$22M revenue. Strong recurring revenue from municipal contracts. Seller is family-operated and motivated.',points:['$4.2M EBITDA — confirmed by April financial package review','Preliminary ask: 6.1x EBITDA ($25.6M) — typical for this segment','Recurring revenue: 74% from multi-year municipal contracts','Seller motivation: family health, wants 90-day close timeline'],ai:'NDA executed April 14. Financial package confirms the January estimates. Management call should be scheduled before May 9.'},
+  'marietta-foods-account-history':{summary:'Full account history for Marietta Foods from 2022 onward. Covers contract evolution, NPS trends, key contacts, and service issues. Marietta represents 23% of revenue — largest single customer.',points:['Relationship started 2022 via industry referral','NPS trend: 41 → 48 → 48 (Q4 2025) → 62 (Q1 2026) — significant Q1 improvement','Service issues: two Line 1 disruptions in 2023, resolved without contract risk','Contract history: always renewed; avg annual price increase accepted: 3.2%'],ai:'The NPS improvement from 48 to 62 is a strong signal going into today\'s QBR. Three Q4 open items are the primary risk in this renewal cycle.'},
+  'tom-ridley-1-1-running-notes':{summary:'Running notes from 1:1s with Tom Ridley (former VP Sales, departed Q4 2025). Covers 14 months of meetings, performance discussions, and transition context. Tom\'s departure created the VP Sales vacancy Jennifer Ruiz is filling.',points:['Tom gave notice October 2025 — departure amicable, competitive offer from outside industry','Marietta and SaniPro were Tom\'s primary accounts — transition context critical','Tom\'s sales methodology: relationship-first, long cycle — Jennifer has compatible style','Three pipeline opportunities Tom was working — status unknown, flagged for Jennifer to inherit'],ai:'Relevant to Jennifer Ruiz onboarding. Tom\'s relationship context with Marietta and SaniPro should be transferred in her first 30 days.'},
+  'union-contract-summary':{summary:'Summary of the current union contract at the Gary, IN facility. Contract expires May 15, 2026. Three clauses flagged by Rick Halverson as conflicting with planned operational changes. External counsel engaged.',points:['Contract expiry: May 15, 2026 — 16 days from now','Three flagged clauses: shift scheduling flexibility, equipment reassignment, overtime calculation','External counsel engaged March 18 — $40K budget approved','Dan Kowalski\'s operational input needed on the impact of each clause'],ai:'May 15 expiry is very close. Cross-referenced with Dan\'s ops notes and Rick Halverson\'s legal correspondence.'},
+};
+function buildVault(){
+  const c=document.getElementById('vault-docs');
+  DOCS.forEach((d,i)=>{
+    const div=document.createElement('div');div.className='vdoc';div.style.animationDelay=(i*40)+'ms';div.style.cursor='pointer';
+    div.innerHTML=`<div class="vdoc-icon">${d.icon}</div><div class="vdoc-info"><div class="vdoc-name">${d.name}</div><div class="vdoc-meta">${d.date} · ${d.size}</div></div><div class="vdoc-check">✓</div>`;
+    div.onclick=()=>openVaultDoc(d,i);
+    c.appendChild(div);
+  });
+}
+function openVaultDoc(d,i){
+  const s=DOC_SUMMARIES[d.name];
+  const panel=document.getElementById('vault-panel');
+  const inner=document.getElementById('vault-panel-inner');
+  panel.style.width='360px';panel.style.borderLeftWidth='1px';
+  const content=s?`
+    <div style="font-size:32px;margin-bottom:16px">${d.icon}</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:4px;line-height:1.3">${d.name.replace(/-/g,' ')}</div>
+    <div style="font-size:12px;color:var(--ink-3);margin-bottom:24px">${d.date} · ${d.size}</div>
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Summary</div>
+    <div style="font-size:13px;color:var(--ink-2);line-height:1.65;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:20px">${s.summary}</div>
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Key points</div>
+    <div style="margin-bottom:20px">${s.points.map(p=>`<div style="font-size:13px;color:var(--ink);line-height:1.6;padding-left:16px;position:relative;margin-bottom:5px"><span style="position:absolute;left:0;color:var(--accent);font-size:16px;line-height:1.3">·</span>${p}</div>`).join('')}</div>
+    <div style="background:var(--gold-glow);border:1px solid var(--accent-d);border-radius:var(--rs);padding:14px">
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px">AI insight</div>
+      <div style="font-size:13px;color:var(--ink-2);line-height:1.6">${s.ai}</div>
+    </div>`
+  :`<div style="font-size:32px;margin-bottom:16px">${d.icon}</div><div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:4px">${d.name.replace(/-/g,' ')}</div><div style="font-size:12px;color:var(--ink-3);margin-bottom:20px">${d.date} · ${d.size}</div><div style="font-size:13px;color:var(--ink-3);font-style:italic">Summary not yet available.</div>`;
+  inner.innerHTML=`<div style="font-size:11px;color:var(--ink-3);cursor:pointer;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px" onclick="document.getElementById('vault-panel').style.width='0';document.getElementById('vault-panel').style.borderLeftWidth='0'">← Close</div>${content}`;
+}
+
+// ===== CALENDAR PREP PANEL =====
+function openPrep(id){
+  const p=MEETING_PREPS[id];if(!p)return;
+  const panel=document.getElementById('prep-panel');
+  const inner=document.getElementById('prep-inner');
+  inner.innerHTML=`<div class="prep-close" onclick="closePrep()">← Close brief</div>
+  <div class="prep-meet-title">${p.title}</div>
+  <div class="prep-meet-meta">${p.time}</div>
+  <div class="prep-meet-with">${p.with}</div>
+  <div class="prep-section"><div class="prep-sh">Context</div><div class="prep-ctx">${p.context}</div></div>
+  <div class="prep-section"><div class="prep-sh">Walk in with</div>${p.bullets.map(b=>`<div class="prep-bullet">${b}</div>`).join('')}</div>
+  <div class="prep-section"><div class="prep-sh">Watch for</div>${p.watch.map(b=>`<div class="prep-bullet">${b}</div>`).join('')}</div>`;
+  panel.classList.add('open');
+}
+function closePrep(){document.getElementById('prep-panel').classList.remove('open')}
+
+// ===== CHAT =====
+const chatHistory=[];
+function addMsg(txt,role){
+  const m=document.getElementById('chat-msgs');
+  const b=document.createElement('div');b.className='cbubble '+role;b.textContent=txt;
+  m.appendChild(b);m.scrollTop=m.scrollHeight;
+  return b;
+}
+function streamChatReply(message){
+  const m=document.getElementById('chat-msgs');
+  const thinking=document.createElement('div');thinking.className='cbubble ai';
+  thinking.innerHTML='<span style="opacity:.45;font-style:italic">Thinking…</span>';
+  m.appendChild(thinking);m.scrollTop=m.scrollHeight;
+  let ab=null,fullText='';
+  const history=chatHistory.slice(0,-1);
+  callAI(message,history,
+    (chunk)=>{
+      if(!ab){thinking.remove();ab=document.createElement('div');ab.className='cbubble ai';ab.textContent='';m.appendChild(ab);}
+      fullText+=chunk;ab.textContent=fullText;m.scrollTop=m.scrollHeight;
+    },
+    ()=>{if(fullText)chatHistory.push({role:'assistant',content:fullText});},
+    (err)=>{if(thinking.parentNode)thinking.remove();const eb=document.createElement('div');eb.className='cbubble ai';eb.textContent='⚠️ '+err;m.appendChild(eb);m.scrollTop=m.scrollHeight;}
+  );
+}
+function sendPrompt(txt){
+  const prompts=document.getElementById('chat-prompts');if(prompts)prompts.remove();
+  addMsg(txt,'user');
+  chatHistory.push({role:'user',content:txt});
+  streamChatReply(txt);
+}
+function sendChat(){
+  const inp=document.getElementById('chat-in');const txt=inp.value.trim();if(!txt)return;
+  const prompts=document.getElementById('chat-prompts');if(prompts)prompts.remove();
+  addMsg(txt,'user');inp.value='';
+  chatHistory.push({role:'user',content:txt});
+  streamChatReply(txt);
+}
+function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}}
+
+// ===== WATCHLIST =====
+function buildWatchlist(){
+  const g=document.getElementById('watch-grid');
+  const riskMap={high:'risk-high',med:'risk-med',low:'risk-low'};
+  const riskLabel={high:'High risk',med:'Medium risk',low:'Low risk'};
+  const riskClass={high:'wr-h',med:'wr-m',low:'wr-l'};
+  WATCHLIST.forEach((w,i)=>{
+    const div=document.createElement('div');
+    div.className=`wcard ${riskMap[w.risk]}`;div.style.animationDelay=(i*60)+'ms';
+    div.innerHTML=`<div class="wcard-top"><div class="wcard-icon">${w.icon}</div><div class="wcard-stage">${w.stage}</div></div><div class="wcard-name">${w.name}</div><div class="wcard-update">${w.update}</div><div class="wcard-risk ${riskClass[w.risk]}"><div class="wr-dot"></div>${riskLabel[w.risk]}</div>`;
+    g.appendChild(div);
+  });
+}
+
+// ===== DECISIONS =====
+function buildDecisions(){
+  const c=document.getElementById('dec-list');
+  const outMap={pending:'do-pending Pending',open:'do-open Open',resolved:'do-resolved Resolved','in-progress':'do-progress In progress'};
+  DECISIONS.forEach((d,i)=>{
+    const [cls,lbl]=(outMap[d.outcome]||'do-open Open').split(' ');
+    const div=document.createElement('div');div.className='dec-item';div.style.animationDelay=(i*80)+'ms';
+    div.innerHTML=`<div class="dec-dot"></div><div class="dec-body"><div class="dec-date">${d.date}</div><div class="dec-name">${d.title}</div><div class="dec-lbl">Context</div><div class="dec-val">${d.context}</div><div class="dec-lbl">Decision made</div><div class="dec-val">${d.decision}</div><div class="dec-footer"><span class="dec-tag">${d.tag}</span><span class="dec-out ${cls}">${lbl}</span></div></div>`;
+    c.appendChild(div);
+  });
+}
+
+// ===== GRAPH =====
+let gNodes=[],gEdges=[],gAF,gCanvas,gCtx,gW=0,gH=0,gDPR=1;
+let gHoverNode=null;
+
+// AI-derived document↔person connections
+const GRAPH_GRAPH_AI_LINKS=[
+  {a:'d0',b:'c1',reason:'Margin bridge built for Cascade acquisition'},
+  {a:'d0',b:'c3',reason:'Sarah Chen led margin bridge analysis'},
+  {a:'d1',b:'c7',reason:'Concentration analysis written for board review'},
+  {a:'d1',b:'c5',reason:'Marietta Foods is 23% — primary concentration risk'},
+  {a:'d2',b:'c2',reason:'Mike Devereux comp review document'},
+  {a:'d3',b:'c8',reason:'Used in Heartland management introduction'},
+  {a:'d4',b:'c10',reason:'SaniPro Q1 intelligence summary'},
+  {a:'d5',b:'c1',reason:'3-year strategy anchored to Cascade ops'},
+  {a:'d6',b:'c3',reason:'Sarah Chen authored Q1 board deck'},
+  {a:'d6',b:'c7',reason:'Karen Vance reviewed Q1 board deck'},
+  {a:'d7',b:'c4',reason:'Hiring brief scoped for Jennifer Ruiz role'},
+  {a:'d8',b:'c8',reason:'Heartland Clean Co. company overview'},
+  {a:'d9',b:'c11',reason:'Marietta account history — Janet Brusser context'},
+  {a:'d10',b:'c4',reason:'Tom Ridley accounts transfer to Jennifer'},
+  {a:'d11',b:'c9',reason:'Union contract managed by Rick Halverson'},
+];
+
+function initGraph(){
+  gCanvas=document.getElementById('graph-canvas');
+  gCtx=gCanvas.getContext('2d');
+  resizeGraph();
+  window.addEventListener('resize',()=>{if(gCanvas){resizeGraph();layoutGraph();drawGraph();}});
+  layoutGraph();
+  gCanvas.addEventListener('mousemove',onGraphHover);
+  gCanvas.addEventListener('click',onGraphClick);
+  gCanvas.addEventListener('mouseleave',()=>{
+    document.getElementById('graph-tip').style.display='none';
+    gHoverNode=null;drawGraph();
+  });
+  drawGraph();
+}
+
+function resizeGraph(){
+  if(!gCanvas)return;
+  const wrap=document.getElementById('graph-wrap');if(!wrap)return;
+  gDPR=window.devicePixelRatio||1;
+  gW=wrap.clientWidth;gH=wrap.clientHeight;
+  gCanvas.width=gW*gDPR;gCanvas.height=gH*gDPR;
+  gCanvas.style.width=gW+'px';gCanvas.style.height=gH+'px';
+  gCtx.setTransform(1,0,0,1,0,0);
+  gCtx.scale(gDPR,gDPR);
+}
+
+function layoutGraph(){
+  if(!gW||!gH)return;
+  const cx=gW/2,cy=gH/2;
+  const s=Math.min(gW/960,gH/620,1);
+  const p=(dx,dy)=>({x:cx+dx*s,y:cy+dy*s});
+
+  // Build node list with fixed cluster positions
+  const contactPos={
+    'c1':p(-200,-40),'c2':p(-340,-130),'c3':p(-330,50),
+    'c6':p(-190,155),'c9':p(-410,30),'c5':p(185,170),
+    'c11':p(305,200),'c10':p(70,270),'c8':p(280,-80),
+    'c7':p(105,-220),'c4':p(0,-170),
+  };
+  const docPos=[
+    p(-145,-215),p(195,-270),p(-425,-200),p(370,-205),
+    p(145,335),p(-285,-265),p(30,-335),p(215,-135),
+    p(390,55),p(400,265),p(250,310),p(-460,130),
+  ];
+
+  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',...p(0,0),r:20}];
+  CONTACTS.forEach(c=>{
+    const pos=contactPos['c'+c.id]||p(Math.random()*200-100,Math.random()*200-100);
+    gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,
+      x:pos.x,y:pos.y,r:Math.min(10+c.mentions*.55,20)});
+  });
+  DOCS.forEach((d,i)=>{
+    const pos=docPos[i]||p(Math.random()*400-200,Math.random()*300-150);
+    const short=d.name.replace(/-/g,' ').replace('acquisition','acq').replace('analysis','').replace('summary','').replace('overview','').replace('review','').replace(/\s+/g,' ').trim().slice(0,22);
+    gNodes.push({id:'d'+i,label:short,type:'document',x:pos.x,y:pos.y,r:6});
+  });
+
+  gEdges=[
+    {from:'you',to:'c1',w:14},{from:'you',to:'c5',w:6},{from:'you',to:'c10',w:5},
+    {from:'you',to:'c8',w:14},{from:'you',to:'c7',w:2},{from:'you',to:'c4',w:4},
+    {from:'c1',to:'c2',w:6},{from:'c1',to:'c3',w:5},{from:'c1',to:'c6',w:5},{from:'c1',to:'c9',w:2},
+    {from:'c5',to:'c11',w:3},{from:'c2',to:'c9',w:3},
+  ];
+}
+
+function drawGraph(){
+  if(!gCtx||!gW||!gH)return;
+  const W=gW,H=gH;
+  gCtx.clearRect(0,0,W,H);
+  gCtx.fillStyle='#F5F1EA';gCtx.fillRect(0,0,W,H);
+  gCtx.strokeStyle='rgba(0,0,0,0.025)';gCtx.lineWidth=1;
+  for(let x=0;x<W;x+=44){gCtx.beginPath();gCtx.moveTo(x,0);gCtx.lineTo(x,H);gCtx.stroke()}
+  for(let y=0;y<H;y+=44){gCtx.beginPath();gCtx.moveTo(0,y);gCtx.lineTo(W,y);gCtx.stroke()}
+
+  const hovId=gHoverNode?gHoverNode.id:null;
+  const connSet=hovId?getConnected(hovId):null;
+
+  // AI doc links (dotted)
+  GRAPH_AI_LINKS.forEach(lk=>{
+    const a=gNodes.find(n=>n.id===lk.a),b=gNodes.find(n=>n.id===lk.b);
+    if(!a||!b)return;
+    const isHov=hovId&&(hovId===lk.a||hovId===lk.b);
+    gCtx.save();
+    gCtx.setLineDash([4,6]);
+    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
+    gCtx.strokeStyle=isHov?'rgba(196,154,60,0.8)':'rgba(196,154,60,0.12)';
+    gCtx.lineWidth=isHov?1.5:0.8;
+    gCtx.stroke();
+    gCtx.restore();
+    if(isHov){
+      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+      gCtx.fillStyle='rgba(196,154,60,0.9)';
+      gCtx.font='9px DM Sans,sans-serif';
+      gCtx.textAlign='center';gCtx.textBaseline='middle';
+      const tw=gCtx.measureText(lk.reason).width+12;
+      gCtx.fillRect(mx-tw/2,my-9,tw,18);
+      gCtx.fillStyle='#fff';gCtx.fillText(lk.reason,mx,my);
+    }
+  });
+
+  // Regular edges
+  gEdges.forEach(e=>{
+    const a=gNodes.find(n=>n.id===e.from),b=gNodes.find(n=>n.id===e.to);
+    if(!a||!b)return;
+    const isHov=hovId&&(hovId===e.from||hovId===e.to||(connSet&&(connSet.has(e.from)||connSet.has(e.to))));
+    const alpha=hovId?(isHov?0.55:0.04):(e.to.startsWith('d')?0.06:0.08+e.w*.012);
+    gCtx.beginPath();gCtx.moveTo(a.x,a.y);gCtx.lineTo(b.x,b.y);
+    gCtx.strokeStyle=`rgba(196,154,60,${alpha})`;
+    gCtx.lineWidth=hovId?(isHov?2:0.4):(e.to.startsWith('d')?0.6:0.7+e.w*.1);
+    gCtx.stroke();
+  });
+
+  // Nodes
+  gNodes.forEach(n=>{
+    const col=n.type==='user'?'#14120B':n.type==='person'?'#C49A3C':n.type==='company'?'#F59E0B':'#9C9890';
+    const dimmed=hovId&&n!==gHoverNode&&connSet&&!connSet.has(n.id);
+    const alpha=dimmed?0.18:1;
+    gCtx.globalAlpha=alpha;
+    if(n.type!=='document'){
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+8,0,Math.PI*2);
+      gCtx.fillStyle=col+(n.type==='user'?'22':'18');gCtx.fill();
+    }
+    if(n===gHoverNode){
+      gCtx.beginPath();gCtx.arc(n.x,n.y,n.r+5,0,Math.PI*2);
+      gCtx.strokeStyle='rgba(196,154,60,0.6)';gCtx.lineWidth=2;gCtx.stroke();
+    }
+    gCtx.beginPath();gCtx.arc(n.x,n.y,n.r,0,Math.PI*2);
+    gCtx.fillStyle=col;gCtx.fill();
+    if(n.type==='user'){
+      gCtx.fillStyle='#F5F1EA';gCtx.font='bold 8px DM Sans,sans-serif';
+      gCtx.textAlign='center';gCtx.textBaseline='middle';gCtx.fillText('YOU',n.x,n.y);
+    }
+    if(n.r>8||n===gHoverNode){
+      const short=n.label.length>20?n.label.slice(0,18)+'…':n.label;
+      gCtx.globalAlpha=dimmed?0.2:1;
+      gCtx.fillStyle=n===gHoverNode?'#C49A3C':'#14120B';
+      gCtx.font=`${n===gHoverNode?11:Math.min(n.r*.65,10)}px DM Sans,sans-serif`;
+      gCtx.textAlign='center';gCtx.textBaseline='top';gCtx.fillText(short,n.x,n.y+n.r+4);
+    }
+    gCtx.globalAlpha=1;
+  });
+}
+
+function getConnected(id){
+  const s=new Set([id]);
+  gEdges.forEach(e=>{if(e.from===id)s.add(e.to);if(e.to===id)s.add(e.from);});
+  GRAPH_AI_LINKS.forEach(lk=>{if(lk.a===id)s.add(lk.b);if(lk.b===id)s.add(lk.a);});
+  return s;
+}
+
+function getHitNode(e){
+  const rect=gCanvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  return gNodes.find(n=>{const dx=n.x-mx,dy=n.y-my;return Math.sqrt(dx*dx+dy*dy)<n.r+6});
+}
+function onGraphHover(e){
+  const tip=document.getElementById('graph-tip');
+  const hit=getHitNode(e);
+  const rect=gCanvas.getBoundingClientRect();
+  const prev=gHoverNode;
+  gHoverNode=hit||null;
+  if(prev!==gHoverNode)drawGraph();
+  if(hit){
+    tip.style.display='block';
+    tip.style.left=(e.clientX-rect.left+14)+'px';
+    tip.style.top=(e.clientY-rect.top-10)+'px';
+    tip.textContent=hit.label;
+    gCanvas.style.cursor='pointer';
+  } else {
+    tip.style.display='none';
+    gCanvas.style.cursor='grab';
+  }
+}
+function onGraphClick(e){
+  const hit=getHitNode(e);
+  const info=document.getElementById('graph-info');
+  if(hit&&hit.type!=='user'&&!hit.id.startsWith('d')){
+    const ct=CONTACTS.find(c=>'c'+c.id===hit.id);
+    if(ct){
+      info.style.display='block';
+      const aiDocs=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
+      info.innerHTML=`<div class="gi-name">${ct.name}</div><div class="gi-type">${ct.type}</div>
+        <div class="gi-stat"><span>Meetings</span><strong>${ct.meets}</strong></div>
+        <div class="gi-stat"><span>Emails</span><strong>${ct.emails}</strong></div>
+        <div class="gi-stat"><span>Last seen</span><strong>${ct.lastSeen}</strong></div>
+        <div class="gi-stat"><span>Mentions</span><strong>${ct.mentions}</strong></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="document.getElementById('graph-info').style.display='none'">✕ Close</div>`;
+    }
+  } else if(hit&&hit.id.startsWith('d')){
+    const idx=parseInt(hit.id.slice(1));
+    const doc=DOCS[idx];
+    const aiConns=GRAPH_AI_LINKS.filter(l=>l.a===hit.id||l.b===hit.id);
+    if(doc){
+      info.style.display='block';
+      info.innerHTML=`<div class="gi-name" style="font-size:13px">${doc.name.replace(/-/g,' ')}</div>
+        <div class="gi-type">Document</div>
+        <div class="gi-stat"><span>Added</span><strong>${doc.date}</strong></div>
+        <div class="gi-stat"><span>Size</span><strong>${doc.size}</strong></div>
+        ${aiConns.length?`<div style="margin-top:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">AI Connections</div>${aiConns.map(l=>`<div style="font-size:11px;color:var(--ink-2);padding:3px 0;border-bottom:1px solid var(--border)">${l.reason}</div>`).join('')}`:''}
+        <div style="margin-top:12px;font-size:11px;color:var(--ink-3);cursor:pointer" onclick="document.getElementById('graph-info').style.display='none'">✕ Close</div>`;
+    }
+  } else if(!hit){info.style.display='none'}
+}
+</script>
+</body>
+</html>
