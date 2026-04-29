@@ -1561,22 +1561,24 @@ function resizeGraph(){
 
 function layoutGraph(){
   if(!gW||!gH)return;
-  const seed=42;let rng=seed;
+  let rng=42;
   const rand=()=>{rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;};
 
-  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:18,vx:0,vy:0}];
+  // All nodes start in a tight cluster near center so repulsion doesn't explode them
+  gNodes=[{id:'you',label:window.userPrefs?.name||'You',type:'user',x:0,y:0,r:14,vx:0,vy:0}];
   CONTACTS.forEach((c,i)=>{
-    const angle=(i/CONTACTS.length)*Math.PI*2+(rand()-.5)*.6;
-    const dist=120+(rand()-.5)*60;
-    const r=Math.min(9+c.mentions*.35,16);
+    const angle=(i/CONTACTS.length)*Math.PI*2;
+    const dist=50+(rand()-.5)*30;
+    const r=Math.min(8+c.mentions*.25,14);
     gNodes.push({id:'c'+c.id,label:c.name,type:c.type,mentions:c.mentions,role:c.role,
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
   });
   DOCS.forEach((d,i)=>{
     const angle=rand()*Math.PI*2;
-    const dist=80+rand()*260;
+    const dist=rand()*60; // start close to center — forces will spread them correctly
     const short=d.name.replace(/-/g,' ').slice(0,20);
-    gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:7,vx:0,vy:0});
+    gNodes.push({id:'d'+i,label:short,type:'document',
+      x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
   });
 
   gEdges=[
@@ -1590,7 +1592,7 @@ function layoutGraph(){
     {from:'c7',to:'c17',w:2},{from:'c4',to:'c13',w:2},
     {from:'c18',to:'c19',w:4},{from:'c25',to:'c29',w:3},
   ];
-  runForceLayout(120);
+  runForceLayout(150);
 }
 
 function runFullForce(iters){
@@ -1600,12 +1602,17 @@ function runFullForce(iters){
   const nodeMap=new Map(nodes.map(nd=>[nd.id,nd]));
   const edges=[];
   gEdges.forEach(e=>edges.push({a:e.from,b:e.to,str:1.0}));
-  GRAPH_AI_LINKS.forEach(l=>edges.push({a:l.a,b:l.b,str:0.55}));
-  const k=Math.sqrt(680*680/n)*1.15;
+  GRAPH_AI_LINKS.forEach(l=>edges.push({a:l.a,b:l.b,str:0.7}));
+
+  const k=38; // fixed small ideal distance — keeps graph compact
+  const MAX_R=310; // hard cap so nothing escapes the viewport
+
   for(let it=0;it<iters;it++){
-    const cool=Math.max(0.04,1-it/iters);
-    const temp=k*cool*1.8;
+    const cool=Math.max(0.03,1-it/iters);
+    const temp=k*cool*2.5;
     nodes.forEach(nd=>{nd.vx=0;nd.vy=0;});
+
+    // Repulsion between all pairs
     for(let i=0;i<n;i++){
       for(let j=i+1;j<n;j++){
         const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
@@ -1615,21 +1622,27 @@ function runFullForce(iters){
         nodes[j].vx-=dx/d*f;nodes[j].vy-=dy/d*f;
       }
     }
+
+    // Attraction along edges
     edges.forEach(e=>{
       const a=nodeMap.get(e.a),b=nodeMap.get(e.b);
       if(!a||!b)return;
       const dx=b.x-a.x,dy=b.y-a.y;
       const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
-      const f=d*d/k*e.str*0.3;
+      const f=d*d/k*e.str*0.35;
       if(a.id!=='you'){a.vx+=dx/d*f;a.vy+=dy/d*f;}
       if(b.id!=='you'){b.vx-=dx/d*f;b.vy-=dy/d*f;}
     });
+
+    // Apply: gravity + temp cap + hard radius cap
     nodes.forEach(nd=>{
       if(nd.id==='you')return;
-      nd.vx-=nd.x*0.025;nd.vy-=nd.y*0.025;
+      nd.vx-=nd.x*0.09; nd.vy-=nd.y*0.09; // strong gravity toward center
       const sp=Math.sqrt(nd.vx*nd.vx+nd.vy*nd.vy);
       if(sp>temp){nd.vx=nd.vx/sp*temp;nd.vy=nd.vy/sp*temp;}
       nd.x+=nd.vx;nd.y+=nd.vy;
+      const r=Math.sqrt(nd.x*nd.x+nd.y*nd.y);
+      if(r>MAX_R){nd.x=nd.x/r*MAX_R;nd.y=nd.y/r*MAX_R;}
     });
   }
 }
@@ -1643,13 +1656,12 @@ function fitGraph(){
   if(!gNodes.length||!gW||!gH)return;
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   gNodes.forEach(n=>{
-    const lpad=60;
-    minX=Math.min(minX,n.x-n.r-lpad);maxX=Math.max(maxX,n.x+n.r+lpad);
+    minX=Math.min(minX,n.x-n.r);maxX=Math.max(maxX,n.x+n.r+80); // +80 for labels
     minY=Math.min(minY,n.y-n.r);maxY=Math.max(maxY,n.y+n.r);
   });
-  const pad=60,w=maxX-minX,h=maxY-minY;
+  const pad=50,w=maxX-minX,h=maxY-minY;
   if(w<=0||h<=0)return;
-  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,2.2);
+  gZoom=Math.min((gW-pad*2)/w,(gH-pad*2)/h,2.0);
   gPanX=-(minX+w/2)*gZoom;gPanY=-(minY+h/2)*gZoom;
 }
 
