@@ -1573,8 +1573,8 @@ function layoutGraph(){
       x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r,vx:0,vy:0});
   });
   DOCS.forEach((d,i)=>{
-    const angle=(i/DOCS.length)*Math.PI*2+(rand()-.5)*.15;
-    const dist=280+(rand()-.5)*40;
+    const angle=(i/DOCS.length)*Math.PI*2+(rand()-.5)*.2;
+    const dist=200+(rand()-.5)*30;
     const short=d.name.replace(/-/g,' ').slice(0,18);
     gNodes.push({id:'d'+i,label:short,type:'document',x:Math.cos(angle)*dist,y:Math.sin(angle)*dist,r:6,vx:0,vy:0});
   });
@@ -1596,14 +1596,16 @@ function layoutGraph(){
 function runForceLayout(iters){
   if(!gNodes.length)return;
   const n=gNodes.length;
-  const k=Math.sqrt(900*700/Math.max(n,1))*0.55;
+  const k=Math.sqrt(600*500/Math.max(n,1))*0.5;
+  const maxRadius=380; // hard cap — nothing gets further than this from center
   const allE=[...gEdges,...GRAPH_AI_LINKS.map(l=>({from:l.a,to:l.b,w:1}))];
   for(let it=0;it<iters;it++){
-    const cool=Math.max(0.02,1-it/iters);
+    const cool=Math.max(0.04,1-it/iters);
     gNodes.forEach(nd=>{nd.vx=0;nd.vy=0;});
-    // Repulsion
+    // Repulsion (skip doc-doc pairs to save compute & reduce spread)
     for(let i=0;i<n;i++){
       for(let j=i+1;j<n;j++){
+        if(gNodes[i].type==='document'&&gNodes[j].type==='document')continue;
         const dx=gNodes[i].x-gNodes[j].x,dy=gNodes[i].y-gNodes[j].y;
         const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
         const f=k*k/d;
@@ -1618,24 +1620,27 @@ function runForceLayout(iters){
       if(!a||!b)return;
       const dx=b.x-a.x,dy=b.y-a.y;
       const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
-      const f=d*d/k*0.35;
+      const f=d*d/k*0.3;
       const fx=dx/d*f,fy=dy/d*f;
       if(a.id!=='you'){a.vx+=fx;a.vy+=fy;}
       if(b.id!=='you'){b.vx-=fx;b.vy-=fy;}
     });
-    // Gravity toward center — prevents unconnected docs from flying away
+    // Strong gravity — all nodes pulled toward center
     gNodes.forEach(nd=>{
       if(nd.id==='you')return;
-      const gravity=nd.type==='document'?0.012:0.005;
-      nd.vx-=nd.x*gravity;nd.vy-=nd.y*gravity;
+      const g=nd.type==='document'?0.06:0.02;
+      nd.vx-=nd.x*g;nd.vy-=nd.y*g;
     });
-    // Apply
-    const maxD=k*cool*3;
+    // Apply with displacement cap
+    const maxD=k*cool*2;
     gNodes.forEach(nd=>{
       if(nd.id==='you')return;
       const sp=Math.sqrt(nd.vx*nd.vx+nd.vy*nd.vy);
       if(sp>maxD){nd.vx=nd.vx/sp*maxD;nd.vy=nd.vy/sp*maxD;}
       nd.x+=nd.vx;nd.y+=nd.vy;
+      // Hard radius clamp
+      const r=Math.sqrt(nd.x*nd.x+nd.y*nd.y);
+      if(r>maxRadius){nd.x=nd.x/r*maxRadius;nd.y=nd.y/r*maxRadius;}
     });
   }
   fitGraph();
