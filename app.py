@@ -76,6 +76,46 @@ When drafting emails or communications, make them sharp and context-specific. Wh
 def index():
     return send_from_directory('.', 'second-brain.html')
 
+@app.route('/graph-connections', methods=['POST'])
+def graph_connections():
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '').strip()
+    if not api_key:
+        return jsonify({'links': []})
+    data = request.get_json(silent=True) or {}
+    nodes = data.get('nodes', [])
+    contacts = [n for n in nodes if n.get('type') in ('person','company')]
+    docs = [n for n in nodes if n.get('type') == 'document']
+    prompt = f"""You are analyzing a business knowledge graph for a PE-backed industrial services company (Cascade Industrial Services).
+
+Generate document-to-person/company connection links for the graph based on the business context you know.
+
+CONTACTS available:
+{chr(10).join(f"- {c['id']}: {c['label']} ({c.get('role','')})" for c in contacts[:40])}
+
+DOCUMENTS available:
+{chr(10).join(f"- {d['id']}: {d['label']}" for d in docs[:100])}
+
+Return ONLY a valid JSON array. Each item: {{"a": "nodeId", "b": "nodeId", "reason": "brief reason"}}
+Generate 40-60 meaningful connections between documents and the people/companies they are most relevant to.
+Return only the JSON array, no other text, no markdown."""
+    try:
+        response = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=3000,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith('['):
+            links = json.loads(text)
+        else:
+            import re
+            m = re.search(r'\[.*\]', text, re.DOTALL)
+            links = json.loads(m.group()) if m else []
+        return jsonify({'links': links})
+    except Exception as e:
+        return jsonify({'links': [], 'error': str(e)})
+
+
 @app.route('/health')
 def health():
     key = os.environ.get('ANTHROPIC_API_KEY', '')
