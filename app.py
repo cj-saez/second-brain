@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, static_folder='.')
-client = Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+client = Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY', '').strip())
 
 # ── Full context injected into every Claude call ──────────────────────────────
 CONTEXT = """
@@ -88,8 +88,8 @@ def ask():
     if not message:
         return jsonify({'error': 'No message provided'}), 400
 
-    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
-    if not api_key or not api_key.startswith('sk-'):
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '').strip()
+    if not api_key:
         def no_key():
             msg = "⚠️ No API key found. Add ANTHROPIC_API_KEY=sk-ant-... to your .env file and restart app.py."
             yield f"data: {json.dumps({'text': msg})}\n\n"
